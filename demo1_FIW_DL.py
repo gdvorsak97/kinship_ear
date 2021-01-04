@@ -16,9 +16,10 @@ from keras_vggface.vggface import VGGFace
 train_file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train_list.csv"
 train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/"
 # this F09 is a family folder one of many.. check why only one
-val_famillies = "F09"  # validation images, list families to separate train, test
+val_famillies = "family10"  # validation images, list families to separate train, test
 
-all_images = glob(train_folders_path + "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/*/*/*.jpg")
+all_images = glob(train_folders_path + '/*/*/*.jpg')
+all_images = [x.replace("\\", "/") for x in all_images]
 train_images = [x for x in all_images if val_famillies not in x]  # all except families in val_families
 val_images = [x for x in all_images if val_famillies in x]  # all images not in validation set
 
@@ -44,6 +45,8 @@ relationships = [x for x in relationships if x[0] in ppl and x[1] in ppl]
 # get train and val relationship list
 train = [x for x in relationships if val_famillies not in x[0]]
 val = [x for x in relationships if val_famillies in x[0]]
+
+# print("checkpoint") #for debugging
 
 
 # read images
