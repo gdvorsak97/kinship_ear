@@ -15,7 +15,7 @@ from keras_vggface.utils import preprocess_input
 from keras_vggface.vggface import VGGFace
 
 train_file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train_list.csv"
-train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/"
+train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train/"
 val_famillies = "family10"  # validation images, list families to separate train, test
 
 all_images = glob(train_folders_path + '/*/*/*.jpg')
@@ -146,7 +146,7 @@ model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiproces
           validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=10, verbose=2,
           workers=1, callbacks=callbacks_list, steps_per_epoch=20, validation_steps=10)
 
-test_path = "../input/test/"
+test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
 
 def chunker(seq, size=32):
