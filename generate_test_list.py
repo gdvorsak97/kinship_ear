@@ -29,7 +29,7 @@ with open(filename, 'a',  newline='') as csvfile:
     if numTest == 0:
         csvwriter.writerow(['img_pair', 'ground_truth', 'is_related'])
     for c in combs:
-        r =[c[0] + '-' + c[1], str(relation), ' ']
+        r =[c[0] + '-' + c[1], str(relation), '']
         print(r)
         csvwriter.writerow(r)
 
