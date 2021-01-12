@@ -4,8 +4,8 @@ from glob import glob
 
 
 base_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\all imgs copy\\"
-member1 = base_path + "family3\\daughter3"
-member2 = base_path + "family3\\father3"
+member1 = base_path + "family11\\mother11"
+member2 = base_path + "family11\\son11"
 # 1 means yes 0 means no
 relation = 1
 
