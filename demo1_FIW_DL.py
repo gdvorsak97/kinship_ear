@@ -141,10 +141,10 @@ callbacks_list = [checkpoint, reduce_on_plateau]
 # can load weights below
 model = baseline_model()
 
-# model.load_weights(file_path)
-model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
-          validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=10, verbose=2,
-          workers=1, callbacks=callbacks_list, steps_per_epoch=20, validation_steps=10)
+model.load_weights(file_path)
+#model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
+#          validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=10, verbose=2,
+#          workers=1, callbacks=callbacks_list, steps_per_epoch=20, validation_steps=10)
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
@@ -153,23 +153,23 @@ def chunker(seq, size=32):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
-# have to recreate this file
-submission = pd.read_csv('../input/sample_submission.csv')
+# file which is later used for the confusion matrix
+results = pd.read_csv('D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test.csv')
 
 predictions = []
 
 # get predictions
-for batch in tqdm(chunker(submission.img_pair.values)):
-    X1 = [x.split("-")[0] for x in batch]
+for batch in tqdm(chunker(results.img_pair.values)):
+    X1 = [x.split("g-")[0] + 'g' for x in batch]
     X1 = np.array([read_img(test_path + x) for x in X1])
 
-    X2 = [x.split("-")[1] for x in batch]
+    X2 = [x.split("g-")[1]  for x in batch]
     X2 = np.array([read_img(test_path + x) for x in X2])
 
     pred = model.predict([X1, X2]).ravel().tolist()
     predictions += pred
 
 # output
-submission['is_related'] = predictions
+results['is_related'] = predictions
 
-submission.to_csv("vgg_face.csv", index=False)
+results.to_csv("vgg_face.csv", index=False)
