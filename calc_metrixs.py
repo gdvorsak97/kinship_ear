@@ -13,7 +13,7 @@ gt = list(results['ground_truth'])
 
 # first define what is binary
 for i in range(len(r)):
-    if r[i] >= 0.1:
+    if r[i] >= 0.5:
         r[i] = 1
     else:
         r[i] = 0
