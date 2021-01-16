@@ -127,7 +127,11 @@ def baseline_model():
     return model
 
 
-file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face.h5"
+n_epochs = 50
+n_steps_per_epoch = 100
+n_val_steps = 50
+key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
+file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
 
 # callback to save weights
 checkpoint = ModelCheckpoint(file_path, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
@@ -141,15 +145,15 @@ callbacks_list = [checkpoint, reduce_on_plateau]
 # can load weights below
 model = baseline_model()
 
-model.load_weights(file_path)
-#model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
-#          validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=10, verbose=2,
-#          workers=1, callbacks=callbacks_list, steps_per_epoch=20, validation_steps=10)
+# model.load_weights(file_path)
+model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
+          validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs, verbose=2,
+          workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch, validation_steps=n_val_steps)
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
 
-def chunker(seq, size=32):
+def chunker(seq, size=64):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
 
@@ -172,4 +176,4 @@ for batch in tqdm(chunker(results.img_pair.values)):
 # output
 results['is_related'] = predictions
 
-results.to_csv("vgg_face.csv", index=False)
+results.to_csv("vgg_face_results" + key + ".csv", index=False)
