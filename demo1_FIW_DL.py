@@ -91,6 +91,9 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
+layers_to_freeze_b2f = -18
+
+
 # Straightforward, generate model as described in the post
 def baseline_model():
     input_1 = Input(shape=(224, 224, 3))
@@ -98,8 +101,8 @@ def baseline_model():
 
     base_model = VGGFace(model='vgg16', include_top=False)
 
-    for x in base_model.layers[:-3]:
-        x.trainable = True
+    for x in base_model.layers[:layers_to_freeze_b2f]:    # Freeze layers here - experiment with the num
+        x.trainable = False
 
     x1 = base_model(input_1)
     x2 = base_model(input_2)
@@ -127,9 +130,9 @@ def baseline_model():
     return model
 
 
-n_epochs = 50
-n_steps_per_epoch = 100
-n_val_steps = 50
+n_epochs = 25
+n_steps_per_epoch = 30
+n_val_steps = 10
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
 

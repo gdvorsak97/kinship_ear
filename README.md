@@ -1,6 +1,6 @@
 #Kinship Analysis Using Ear Images
 
-####NOTE: last Nvidia driver to support tensorflow at the moment was from 2.12.2020
+####NOTE: last Nvidia driver to support tensorflow at the moment was from 07.01.2021
 
 ###USAGE
 To use this model, first obtain the data at https://unilj-my.sharepoint.com/:u:/g/personal/zemersic_fri1_uni-lj_si/EedkQGEDuMBOqMTJnIg3NLgBK0OYq6f_K1uQgcRr27G06g?e=LFhtjl
