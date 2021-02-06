@@ -1,6 +1,6 @@
 #Kinship Analysis Using Ear Images
 
-####NOTE: last Nvidia driver to support tensorflow at the moment was from 07.01.2021
+####NOTE: last Nvidia driver to support tensorflow at the moment was from 26.01.2021
 
 ###USAGE
 To use this model, first obtain the data at https://unilj-my.sharepoint.com/:u:/g/personal/zemersic_fri1_uni-lj_si/EedkQGEDuMBOqMTJnIg3NLgBK0OYq6f_K1uQgcRr27G06g?e=LFhtjl
@@ -16,3 +16,5 @@ A custom test set list can be created using generate_test_list.py, where we add 
 To train the model and make predictions, use demo1_FIW_DL.py. Parameters can be specified in the file.
 
 To calculate CA, specificity and sensitivity, use calc_metrics.py.
+
+[comment]: <> (A great tutorial: https://www.tensorflow.org/tutorials/structured_data/imbalanced_data)

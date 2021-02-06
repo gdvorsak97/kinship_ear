@@ -1,10 +1,14 @@
 from collections import defaultdict
 from glob import glob
+
+import keras
 import pandas as pd
 import cv2
 import numpy as np
 from random import choice, sample
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+
 
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D, Concatenate, Multiply, Dropout, \
@@ -46,8 +50,39 @@ relationships = [x for x in relationships if x[0] in ppl and x[1] in ppl]
 train = [x for x in relationships if val_famillies not in x[0]]
 val = [x for x in relationships if val_famillies in x[0]]
 
+METRICS = [
+    keras.metrics.TruePositives(name='tp'),
+    keras.metrics.FalsePositives(name='fp'),
+    keras.metrics.TrueNegatives(name='tn'),
+    keras.metrics.FalseNegatives(name='fn'),
+    keras.metrics.BinaryAccuracy(name='accuracy'),
+    keras.metrics.Precision(name='precision'),
+    keras.metrics.Recall(name='recall'),
+    keras.metrics.AUC(name='auc'),
+]
 
-# print("checkpoint") #for debugging
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+
+def plot_metrics(history):
+    metrics = ['loss', 'auc', 'precision', 'recall']
+    for n, metric in enumerate(metrics):
+        name = metric.replace("_", " ").capitalize()
+        plt.subplot(2, 2, n + 1)
+        plt.plot(history.epoch, history.history[metric], color=colors[0], label='Train')
+        plt.plot(history.epoch, history.history['val_' + metric],
+                 color=colors[0], linestyle="--", label='Val')
+        plt.xlabel('Epoch')
+        plt.ylabel(name)
+        if metric == 'loss':
+            plt.ylim([0, plt.ylim()[1]])
+        elif metric == 'auc':
+            plt.ylim([0.8, 1])
+        else:
+            plt.ylim([0, 1])
+
+        plt.legend()
 
 
 # read images
@@ -125,7 +160,7 @@ def baseline_model():
     out = Dense(1, activation="sigmoid")(x)
 
     model = Model([input_1, input_2], out)
-    model.compile(loss="binary_crossentropy", metrics=['acc'], optimizer=Adam(0.00001))
+    model.compile(loss="binary_crossentropy", metrics=METRICS, optimizer=Adam(0.00001))
     model.summary()
 
     return model
@@ -150,9 +185,14 @@ callbacks_list = [checkpoint, reduce_on_plateau]
 model = baseline_model()
 
 # model.load_weights(file_path)
-model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
-          validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs, verbose=2,
-          workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch, validation_steps=n_val_steps)
+baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
+                             validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs,
+                             verbose=2,
+                             workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
+                             validation_steps=n_val_steps)
+
+plot_metrics(baseline_history)
+
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
