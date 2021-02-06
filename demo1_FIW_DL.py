@@ -61,8 +61,19 @@ METRICS = [
     keras.metrics.AUC(name='auc'),
 ]
 
-
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+
+def plot_loss(history, label, n):
+    # Use a log scale on y-axis to show the wide range of values.
+    plt.semilogy(history.epoch, history.history['loss'],
+                 color=colors[n], label='Train ' + label)
+    plt.semilogy(history.epoch, history.history['val_loss'],
+                 color=colors[n], label='Val ' + label,
+                 linestyle="--")
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.show()
 
 
 def plot_metrics(history):
@@ -78,11 +89,12 @@ def plot_metrics(history):
         if metric == 'loss':
             plt.ylim([0, plt.ylim()[1]])
         elif metric == 'auc':
-            plt.ylim([0.8, 1])
+            plt.ylim([0, 1])  # originally from 0.8 to 1
         else:
             plt.ylim([0, 1])
 
         plt.legend()
+    plt.show()
 
 
 # read images
@@ -166,8 +178,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 20
-n_steps_per_epoch = 25
+n_epochs = 5
+n_steps_per_epoch = 10
 n_val_steps = 10
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
@@ -181,7 +193,6 @@ reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=20, verbose=1)
 callbacks_list = [checkpoint, reduce_on_plateau]
 # callbacks_list = [reduce_on_plateau]
 
-# can load weights below
 model = baseline_model()
 
 # model.load_weights(file_path)
@@ -191,8 +202,8 @@ baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=1
                              workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
                              validation_steps=n_val_steps)
 
+# plot_loss(baseline_history, "Baseline", 0)
 plot_metrics(baseline_history)
-
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
@@ -221,3 +232,4 @@ for batch in tqdm(chunker(results.img_pair.values)):
 results['is_related'] = predictions
 
 results.to_csv("vgg_face_results" + key + ".csv", index=False)
+

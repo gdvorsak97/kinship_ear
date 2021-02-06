@@ -1,25 +1,37 @@
 import pandas as pd
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
 
+
+def plot_roc(name, labels, predictions, **kwargs):
+    fp, tp, _ = roc_curve(labels, predictions)
+
+    plt.plot(fp, tp, label=name, linewidth=2, **kwargs)
+    plt.xlabel('False positives [%]')
+    plt.ylabel('True positives [%]')
+    plt.grid(True)
+    ax = plt.gca()
+    ax.set_aspect('equal')
+
+
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 filename = 'D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\vgg_face_results.csv'
 results = pd.read_csv(filename)
 
-r = list(results['is_related'])
-gt = list(results['ground_truth'])
+pred = list(results['is_related'])
+truth = list(results['ground_truth'])
 
-# print(r)
-# print(gt)
 
 # first define what is binary
-for i in range(len(r)):
-    if r[i] >= 0.5:
-        r[i] = 1
+for i in range(len(pred)):
+    if pred[i] >= 0.5:
+        pred[i] = 1
     else:
-        r[i] = 0
+        pred[i] = 0
 
-cm = confusion_matrix(gt, r)
-ca = accuracy_score(gt, r)
+cm = confusion_matrix(truth, pred)
+ca = accuracy_score(truth, pred)
+auc = roc_auc_score(truth, pred)
 
 print(cm)
 print('CA:\t\t\t\t ' + str(ca))
@@ -30,9 +42,14 @@ FN = cm[1, 0]
 TP = cm[1, 1]
 FP = cm[0, 1]
 
-sens = TP / (TP + TN)   # pred relationships as true relationships
-spec = TN / (TP + TN)   # pred non-related as non-related
+sens = TP / (TP + TN)  # pred relationships as true relationships
+spec = TN / (TP + TN)  # pred non-related as non-related
 
 print('Sensitivity:\t ' + str(sens))
 print('Specificity:\t ' + str(spec))
+print('ROC-AUC:\t\t ' + str(auc))
 
+
+plot_roc("Test Baseline", truth, pred, color=colors[0])
+plt.legend(loc='lower right')
+plt.show()
