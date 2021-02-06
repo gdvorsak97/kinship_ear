@@ -55,7 +55,7 @@ def read_img(path):
     img = cv2.imread(path)
     img = cv2.resize(img, (224, 224))
     img = np.array(img, dtype="float64")
-    return preprocess_input(img, version=2)
+    return preprocess_input(img, version=1)  # 1 for VGG, 2 otherwise
 
 
 # generator of labels for pairs
@@ -91,7 +91,8 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-layers_to_freeze_b2f = -18
+# There are 17 layers with trainable parameters
+layers_to_freeze_b2f = -6
 
 
 # Straightforward, generate model as described in the post
@@ -101,7 +102,7 @@ def baseline_model():
 
     base_model = VGGFace(model='vgg16', include_top=False)
 
-    for x in base_model.layers[:layers_to_freeze_b2f]:    # Freeze layers here - experiment with the num
+    for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
         x.trainable = False
 
     x1 = base_model(input_1)
@@ -130,17 +131,17 @@ def baseline_model():
     return model
 
 
-n_epochs = 25
-n_steps_per_epoch = 30
+n_epochs = 20
+n_steps_per_epoch = 25
 n_val_steps = 10
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
 
 # callback to save weights
-checkpoint = ModelCheckpoint(file_path, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
 
 # reduce rate when learning stagnates
-reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.1, patience=20, verbose=1)
+reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=20, verbose=1)
 
 callbacks_list = [checkpoint, reduce_on_plateau]
 # callbacks_list = [reduce_on_plateau]
@@ -170,7 +171,7 @@ for batch in tqdm(chunker(results.img_pair.values)):
     X1 = [x.split("g-")[0] + 'g' for x in batch]
     X1 = np.array([read_img(test_path + x) for x in X1])
 
-    X2 = [x.split("g-")[1]  for x in batch]
+    X2 = [x.split("g-")[1] for x in batch]
     X2 = np.array([read_img(test_path + x) for x in X2])
 
     pred = model.predict([X1, X2]).ravel().tolist()
