@@ -17,6 +17,9 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from keras_vggface.utils import preprocess_input
 from keras_vggface.vggface import VGGFace
+import matplotlib as mpl
+
+mpl.rcParams['figure.figsize'] = (12, 10)
 
 train_file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train_list.csv"
 train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train/"
@@ -178,8 +181,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 5
-n_steps_per_epoch = 10
+n_epochs = 25
+n_steps_per_epoch = 30
 n_val_steps = 10
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
