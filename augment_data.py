@@ -33,16 +33,24 @@ print("full size: " + str(len(test_files)))
 test_files = [test_dir + test_files[i] for i in range(len(test_labels)) if test_labels[i] == '1']
 print("size after removal of imposters " + str(len(test_files)))
 
+# define datasets
 list_ds = tf.data.Dataset.list_files(train_files, shuffle=False)
 list_ds = list_ds.shuffle(len(train_files), reshuffle_each_iteration=False)
+test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
+test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
 
+# split train and val, make test
 val_size = int(len(train_files) * 0.2)
 train_ds = list_ds.skip(val_size)
 val_ds = list_ds.take(val_size)
+test_ds = test_list_ds.take(len(test_files))
 
+# print sizes
 print(tf.data.experimental.cardinality(train_ds).numpy())
 print(tf.data.experimental.cardinality(val_ds).numpy())
+print(tf.data.experimental.cardinality(test_ds).numpy())
 
+# define class labels
 cn = []
 for i in train_files:
     cn.append(i.split("\\")[-2])
@@ -74,9 +82,11 @@ def process_path(file_path):
     return img, label
 
 
+# create image, label pairs
 # Set `num_parallel_calls` so multiple images are loaded/processed in parallel.
 train_ds = train_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 val_ds = val_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
 
 def configure_for_performance(ds):
@@ -87,5 +97,7 @@ def configure_for_performance(ds):
     return ds
 
 
+# well shuffled data, batches
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
+test_ds = configure_for_performance(test_ds)
