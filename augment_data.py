@@ -136,7 +136,7 @@ plt.show()
 
 data_augmentation = tf.keras.Sequential([
     layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-    layers.experimental.preprocessing.RandomRotation(0.2),
+    layers.experimental.preprocessing.RandomRotation(0.3),
 ])
 
 # Add the image to a batch
@@ -200,3 +200,4 @@ test_ds = configure_for_performance(test_ds)
 
 # USE model.save! to get the augmentation steps in place and load it into the next step.
 # try to save the datasets as well
+print("end")
