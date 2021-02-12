@@ -1,11 +1,12 @@
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+from tensorflow.keras import layers
 
 import tensorflow as tf
 from glob import glob
 
 from tensorflow.python.data import AUTOTUNE
-
 
 """
 TAKEN FROM load: https://www.tensorflow.org/tutorials/load_data/images#using_tfdata_for_finer_control
@@ -66,12 +67,15 @@ def get_label(file_path):
     return tf.argmax(one_hot)
 
 
+img_height = 180
+img_width = 180
+
+
 def decode_img(img):
     # convert the compressed string to a 3D uint8 tensor
     img = tf.image.decode_jpeg(img, channels=3)
     # resize the image to the desired size
-    # return tf.image.resize(img, [img_height, img_width]) # resize if needed
-    return img
+    return tf.image.resize(img, [img_height, img_width])  # resize if needed
 
 
 def process_path(file_path):
@@ -97,7 +101,63 @@ def configure_for_performance(ds):
     return ds
 
 
-# well shuffled data, batches
+image, label = next(iter(train_ds))
+
+"""
+# TEST TO SHOW IMAGE
+plt.imshow(image)
+plt.show()
+"""
+
+
+# AUGMENTATION START
+resize_and_rescale = tf.keras.Sequential([
+  layers.experimental.preprocessing.Resizing(img_height, img_width),
+  layers.experimental.preprocessing.Rescaling(1./255)
+])
+
+"""
+# test
+result = resize_and_rescale(image)
+plt.imshow(result)
+plt.show()
+"""
+
+data_augmentation = tf.keras.Sequential([
+  layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
+  layers.experimental.preprocessing.RandomRotation(0.2),
+])
+
+# Add the image to a batch
+image = tf.expand_dims(image, 0)
+
+"""
+# Test
+plt.figure(figsize=(10, 10))
+for i in range(9):
+  augmented_image = data_augmentation(image)
+  ax = plt.subplot(3, 3, i + 1)
+  plt.imshow(augmented_image[0])
+  plt.axis("off")
+  plt.show()
+"""
+
+# OTHER CHOICES AFTER TEST WORKS
+# layers.RandomContrast, layers.RandomCrop, layers.RandomZoom
+
+# well shuffled data, batches - DO BEFORE TRAINING
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
 test_ds = configure_for_performance(test_ds)
+
+# Add all this to model
+
+model = tf.keras.Sequential([
+  resize_and_rescale,
+  data_augmentation,
+  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  # Rest of your model
+])
+
+# USE model.save! to get the augmentation steps in place and load it into the next step.
