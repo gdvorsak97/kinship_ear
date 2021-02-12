@@ -34,6 +34,16 @@ print("full size: " + str(len(test_files)))
 test_files = [test_dir + test_files[i] for i in range(len(test_labels)) if test_labels[i] == '1']
 print("size after removal of imposters " + str(len(test_files)))
 
+"""
+Test to check that images are shown after resize
+img = tf.io.read_file(test_files[0])
+img = tf.image.decode_jpeg(img, channels=3)
+img = tf.image.resize(img, [180,180])
+img = tf.cast(img, tf.uint8)
+plt.imshow(img)
+plt.show()
+"""
+
 # define datasets
 list_ds = tf.data.Dataset.list_files(train_files, shuffle=False)
 list_ds = list_ds.shuffle(len(train_files), reshuffle_each_iteration=False)
@@ -75,7 +85,9 @@ def decode_img(img):
     # convert the compressed string to a 3D uint8 tensor
     img = tf.image.decode_jpeg(img, channels=3)
     # resize the image to the desired size
-    return tf.image.resize(img, [img_height, img_width])  # resize if needed
+    img = tf.image.resize(img, [img_height, img_width])  # resize if needed
+    img = tf.cast(img, tf.uint8)
+    return img
 
 
 def process_path(file_path):
@@ -104,7 +116,7 @@ def configure_for_performance(ds):
 image, label = next(iter(train_ds))
 
 """
-# TEST TO SHOW IMAGE
+# TEST TO SHOW IMAGE - WORKING
 plt.imshow(image)
 plt.show()
 """
@@ -116,7 +128,7 @@ resize_and_rescale = tf.keras.Sequential([
 ])
 
 """
-# test
+# test - WORKS BUT SET SIZE AND CHECK ALL
 result = resize_and_rescale(image)
 plt.imshow(result)
 plt.show()
@@ -134,11 +146,11 @@ image = tf.expand_dims(image, 0)
 # Test
 plt.figure(figsize=(10, 10))
 for i in range(9):
-  augmented_image = data_augmentation(image)
-  ax = plt.subplot(3, 3, i + 1)
-  plt.imshow(augmented_image[0])
-  plt.axis("off")
-  plt.show()
+    augmented_image = data_augmentation(image)
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(augmented_image[0])
+    plt.axis("off")
+plt.show()
 """
 
 # OTHER CHOICES AFTER TEST WORKS
