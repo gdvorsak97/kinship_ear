@@ -109,11 +109,10 @@ plt.imshow(image)
 plt.show()
 """
 
-
 # AUGMENTATION START
 resize_and_rescale = tf.keras.Sequential([
-  layers.experimental.preprocessing.Resizing(img_height, img_width),
-  layers.experimental.preprocessing.Rescaling(1./255)
+    layers.experimental.preprocessing.Resizing(img_height, img_width),
+    layers.experimental.preprocessing.Rescaling(1. / 255)
 ])
 
 """
@@ -124,8 +123,8 @@ plt.show()
 """
 
 data_augmentation = tf.keras.Sequential([
-  layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-  layers.experimental.preprocessing.RandomRotation(0.2),
+    layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
+    layers.experimental.preprocessing.RandomRotation(0.2),
 ])
 
 # Add the image to a batch
@@ -145,19 +144,47 @@ for i in range(9):
 # OTHER CHOICES AFTER TEST WORKS
 # layers.RandomContrast, layers.RandomCrop, layers.RandomZoom
 
+
+# Add all this to model
+
+model = tf.keras.Sequential([
+    resize_and_rescale,
+    data_augmentation,
+    layers.Conv2D(16, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    # Rest of your model
+])
+
+
+# modify datasets
+def prepare(ds, shuffle=False, augment=False):
+    # Resize and rescale all datasets
+    ds = ds.map(lambda x, y: (resize_and_rescale(x), y),
+                num_parallel_calls=AUTOTUNE)
+
+    if shuffle:
+        ds = ds.shuffle(1000)
+
+    # Batch all datasets
+    ds = ds.batch(32)
+
+    # Use data augmentation only on the training set
+    if augment:
+        ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y),
+                    num_parallel_calls=AUTOTUNE)
+
+    # Use buffered prefecting on all datasets
+    return ds.prefetch(buffer_size=AUTOTUNE)
+
+
+train_ds = prepare(train_ds, shuffle=True, augment=True)
+val_ds = prepare(val_ds)
+test_ds = prepare(test_ds)
+
 # well shuffled data, batches - DO BEFORE TRAINING
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
 test_ds = configure_for_performance(test_ds)
 
-# Add all this to model
-
-model = tf.keras.Sequential([
-  resize_and_rescale,
-  data_augmentation,
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
-  layers.MaxPooling2D(),
-  # Rest of your model
-])
-
 # USE model.save! to get the augmentation steps in place and load it into the next step.
+# try to save the datasets as well
