@@ -137,6 +137,7 @@ plt.show()
 data_augmentation = tf.keras.Sequential([
     layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
     layers.experimental.preprocessing.RandomRotation(0.3),
+    layers.experimental.preprocessing.RandomContrast([0.5, 1.5])
 ])
 
 # Add the image to a batch
@@ -145,15 +146,15 @@ image = tf.expand_dims(image, 0)
 """
 # Test
 plt.figure(figsize=(10, 10))
-for i in range(9):
+for i in range(12):
     augmented_image = data_augmentation(image)
-    ax = plt.subplot(3, 3, i + 1)
+    ax = plt.subplot(3, 4, i + 1)
     plt.imshow(augmented_image[0])
     plt.axis("off")
 plt.show()
 """
 
-# OTHER CHOICES AFTER TEST WORKS
+# OTHER CHOICES AFTER TEST WORKS - the latter 2 aren't used as whole ears are needed
 # layers.RandomContrast, layers.RandomCrop, layers.RandomZoom
 
 
