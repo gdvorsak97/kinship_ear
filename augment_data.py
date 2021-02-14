@@ -7,6 +7,7 @@ import tensorflow as tf
 from glob import glob
 
 from tensorflow.python.data import AUTOTUNE
+from tensorflow.python.keras.utils.vis_utils import plot_model
 
 """
 TAKEN FROM load: https://www.tensorflow.org/tutorials/load_data/images#using_tfdata_for_finer_control
@@ -66,6 +67,8 @@ cn = []
 for i in train_files:
     cn.append(i.split("\\")[-2])
 class_names = np.array(sorted(cn))
+unique_classes =list(set(cn))
+num_classes = len(unique_classes)
 
 
 def get_label(file_path):
@@ -165,7 +168,13 @@ model = tf.keras.Sequential([
     data_augmentation,
     layers.Conv2D(16, 3, padding='same', activation='relu'),
     layers.MaxPooling2D(),
-    # Rest of your model
+    layers.Conv2D(32, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Conv2D(64, 3, padding='same', activation='relu'),
+    layers.MaxPooling2D(),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(num_classes)
 ])
 
 
@@ -198,6 +207,14 @@ test_ds = prepare(test_ds)
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
 test_ds = configure_for_performance(test_ds)
+
+model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+history = model.fit(train_ds,  epochs=10,
+                    validation_data=val_ds)
+
+plot_model(model, to_file='model.png')
 
 # USE model.save! to get the augmentation steps in place and load it into the next step.
 # try to save the datasets as well
