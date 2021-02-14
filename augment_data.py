@@ -35,6 +35,13 @@ print("full size: " + str(len(test_files)))
 test_files = [test_dir + test_files[i] for i in range(len(test_labels)) if test_labels[i] == '1']
 print("size after removal of imposters " + str(len(test_files)))
 
+
+# include non-imposters from "test" into training
+# print(len(train_files))
+for i in test_files:
+    train_files.append(i)
+# print(len(train_files))
+
 """
 Test to check that images are shown after resize
 img = tf.io.read_file(test_files[0])
@@ -48,26 +55,26 @@ plt.show()
 # define datasets
 list_ds = tf.data.Dataset.list_files(train_files, shuffle=False)
 list_ds = list_ds.shuffle(len(train_files), reshuffle_each_iteration=False)
-test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
-test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
+# test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
+# test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
 
 # split train and val, make test
 val_size = int(len(train_files) * 0.2)
 train_ds = list_ds.skip(val_size)
 val_ds = list_ds.take(val_size)
-test_ds = test_list_ds.take(len(test_files))
+# test_ds = test_list_ds.take(len(test_files))
 
 # print sizes
 print(tf.data.experimental.cardinality(train_ds).numpy())
 print(tf.data.experimental.cardinality(val_ds).numpy())
-print(tf.data.experimental.cardinality(test_ds).numpy())
+# print(tf.data.experimental.cardinality(test_ds).numpy())
 
 # define class labels
 cn = []
 for i in train_files:
     cn.append(i.split("\\")[-2])
 class_names = np.array(sorted(cn))
-unique_classes =list(set(cn))
+unique_classes = list(set(cn))
 num_classes = len(unique_classes)
 
 
@@ -105,7 +112,7 @@ def process_path(file_path):
 # Set `num_parallel_calls` so multiple images are loaded/processed in parallel.
 train_ds = train_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 val_ds = val_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+# test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
 
 def configure_for_performance(ds):
@@ -201,13 +208,13 @@ def prepare(ds, shuffle=False, augment=False):
 
 train_ds = prepare(train_ds, shuffle=True, augment=True)
 val_ds = prepare(val_ds)
-test_ds = prepare(test_ds)
+# test_ds = prepare(test_ds)
 
 
 # well shuffled data, batches - DO BEFORE TRAINING
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
-test_ds = configure_for_performance(test_ds)
+# test_ds = configure_for_performance(test_ds)
 
 model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
