@@ -111,12 +111,14 @@ test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 def configure_for_performance(ds):
     ds = ds.cache()
     ds = ds.shuffle(buffer_size=1000)
-    ds = ds.batch(32)
+    # ds = ds.batch(32)
     ds = ds.prefetch(buffer_size=AUTOTUNE)
     return ds
 
 
 image, label = next(iter(train_ds))
+
+print(image)
 
 """
 # TEST TO SHOW IMAGE - WORKING
@@ -144,7 +146,7 @@ data_augmentation = tf.keras.Sequential([
 ])
 
 # Add the image to a batch
-image = tf.expand_dims(image, 0)
+# image = tf.expand_dims(image, 0)
 
 """
 # Test
@@ -202,6 +204,10 @@ def prepare(ds, shuffle=False, augment=False):
 train_ds = prepare(train_ds, shuffle=True, augment=True)
 val_ds = prepare(val_ds)
 test_ds = prepare(test_ds)
+
+image, label = next(iter(train_ds))
+
+print(image)
 
 # well shuffled data, batches - DO BEFORE TRAINING
 train_ds = configure_for_performance(train_ds)
