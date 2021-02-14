@@ -118,8 +118,6 @@ def configure_for_performance(ds):
 
 image, label = next(iter(train_ds))
 
-print(image)
-
 """
 # TEST TO SHOW IMAGE - WORKING
 plt.imshow(image)
@@ -205,9 +203,6 @@ train_ds = prepare(train_ds, shuffle=True, augment=True)
 val_ds = prepare(val_ds)
 test_ds = prepare(test_ds)
 
-image, label = next(iter(train_ds))
-
-print(image)
 
 # well shuffled data, batches - DO BEFORE TRAINING
 train_ds = configure_for_performance(train_ds)
@@ -219,8 +214,8 @@ model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentro
 
 history = model.fit(train_ds,  epochs=10,
                     validation_data=val_ds)
+plot_model(model)
 
-plot_model(model, to_file='model.png')
 
 # USE model.save! to get the augmentation steps in place and load it into the next step.
 # try to save the datasets as well
