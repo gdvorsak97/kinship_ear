@@ -7,7 +7,10 @@ import tensorflow as tf
 from glob import glob
 
 from tensorflow.python.data import AUTOTUNE
+from tensorflow.python.keras import losses
+from tensorflow.python.keras.applications.resnet import ResNet152
 from tensorflow.python.keras.utils.vis_utils import plot_model
+from tensorflow.keras import Model
 
 """
 TAKEN FROM load: https://www.tensorflow.org/tutorials/load_data/images#using_tfdata_for_finer_control
@@ -34,7 +37,6 @@ f.close()
 print("full size: " + str(len(test_files)))
 test_files = [test_dir + test_files[i] for i in range(len(test_labels)) if test_labels[i] == '1']
 print("size after removal of imposters " + str(len(test_files)))
-
 
 # include non-imposters from "test" into training
 # print(len(train_files))
@@ -112,6 +114,8 @@ def process_path(file_path):
 # Set `num_parallel_calls` so multiple images are loaded/processed in parallel.
 train_ds = train_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 val_ds = val_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+
+
 # test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
 
@@ -170,19 +174,14 @@ plt.show()
 
 # Add all this to model
 
-model = tf.keras.Sequential([
-    resize_and_rescale,
-    data_augmentation,
-    layers.Conv2D(16, 3, padding='same', activation='relu'),
-    layers.MaxPooling2D(),
-    layers.Conv2D(32, 3, padding='same', activation='relu'),
-    layers.MaxPooling2D(),
-    layers.Conv2D(64, 3, padding='same', activation='relu'),
-    layers.MaxPooling2D(),
-    layers.Flatten(),
-    layers.Dense(128, activation='relu'),
-    layers.Dense(num_classes)
-])
+base_model = ResNet152(weights='imagenet', include_top=False, input_shape=(img_height, img_width, 3))
+
+for layer in base_model.layers:
+    layer.trainable = False
+
+x = layers.Flatten()(base_model.output)
+x = layers.Dense(1000, activation='relu')(x)
+predictions = layers.Dense(num_classes, activation='softmax')(x)
 
 
 # modify datasets
@@ -216,13 +215,13 @@ train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
 # test_ds = configure_for_performance(test_ds)
 
-model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              metrics=['accuracy'])
+head_model = Model(inputs = base_model.input, outputs = predictions)
+head_model.compile(optimizer='adam', loss=losses.sparse_categorical_crossentropy, metrics=['accuracy'])
 
-history = model.fit(train_ds,  epochs=10,
-                    validation_data=val_ds)
-plot_model(model)
+# plot_model(head_model)
+head_model.summary()
 
+history = head_model.fit(train_ds, batch_size=32, epochs=40, validation_data=val_ds)
 
 # USE model.save! to get the augmentation steps in place and load it into the next step.
 # try to save the datasets as well
