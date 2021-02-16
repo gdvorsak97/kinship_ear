@@ -15,6 +15,7 @@ from tensorflow.keras import Model
 """
 TAKEN FROM load: https://www.tensorflow.org/tutorials/load_data/images#using_tfdata_for_finer_control
         augment: https://www.tensorflow.org/tutorials/images/data_augmentation#apply_augmentation_to_a_dataset
+        resnet training: https://medium.com/swlh/resnet-with-tensorflow-transfer-learning-13ff0773cf0c
 """
 
 data_dir = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\UERC Competition Package 2019\\Dataset\\"
