@@ -224,6 +224,24 @@ head_model.summary()
 
 history = head_model.fit(train_ds, batch_size=32, epochs=40, validation_data=val_ds)
 
+fig, axs = plt.subplots(2, 1, figsize=(15,15))
+axs[0].plot(history.history['loss'])
+axs[0].plot(history.history['val_loss'])
+axs[0].title.set_text('Training Loss vs Validation Loss')
+axs[0].set_xlabel('Epochs')
+axs[0].set_ylabel('Loss')
+axs[0].legend(['Train','Val'])
+axs[1].plot(history.history['accuracy'])
+axs[1].plot(history.history['val_accuracy'])
+axs[1].title.set_text('Training Accuracy vs Validation Accuracy')
+axs[1].set_xlabel('Epochs')
+axs[1].set_ylabel('Accuracy')
+axs[1].legend(['Train', 'Val'])
+
+fig.show()
+
+head_model.save("model.h5")
+
 # USE model.save! to get the augmentation steps in place and load it into the next step.
 # try to save the datasets as well
 print("end")
