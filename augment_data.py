@@ -7,7 +7,6 @@ import tensorflow as tf
 from glob import glob
 
 from tensorflow.python.data import AUTOTUNE
-from tensorflow.python.keras import losses
 from tensorflow.python.keras.applications.resnet import ResNet152
 from tensorflow.python.keras.utils.vis_utils import plot_model
 from tensorflow.keras import Model
@@ -39,11 +38,13 @@ print("full size: " + str(len(test_files)))
 test_files = [test_dir + test_files[i] for i in range(len(test_labels)) if test_labels[i] == '1']
 print("size after removal of imposters " + str(len(test_files)))
 
+"""
 # include non-imposters from "test" into training
 # print(len(train_files))
 for i in test_files:
     train_files.append(i)
 # print(len(train_files))
+"""
 
 """
 Test to check that images are shown after resize
@@ -58,19 +59,19 @@ plt.show()
 # define datasets
 list_ds = tf.data.Dataset.list_files(train_files, shuffle=False)
 list_ds = list_ds.shuffle(len(train_files), reshuffle_each_iteration=False)
-# test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
-# test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
+test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
+test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
 
 # split train and val, make test
 val_size = int(len(train_files) * 0.2)
 train_ds = list_ds.skip(val_size)
 val_ds = list_ds.take(val_size)
-# test_ds = test_list_ds.take(len(test_files))
+test_ds = test_list_ds.take(len(test_files))
 
 # print sizes
 print(tf.data.experimental.cardinality(train_ds).numpy())
 print(tf.data.experimental.cardinality(val_ds).numpy())
-# print(tf.data.experimental.cardinality(test_ds).numpy())
+print(tf.data.experimental.cardinality(test_ds).numpy())
 
 # define class labels
 cn = []
@@ -115,9 +116,7 @@ def process_path(file_path):
 # Set `num_parallel_calls` so multiple images are loaded/processed in parallel.
 train_ds = train_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 val_ds = val_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-
-
-# test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
 
 
 def configure_for_performance(ds):
@@ -208,7 +207,7 @@ def prepare(ds, shuffle=False, augment=False):
 
 train_ds = prepare(train_ds, shuffle=True, augment=True)
 val_ds = prepare(val_ds)
-# test_ds = prepare(test_ds)
+test_ds = prepare(test_ds)
 
 
 # well shuffled data, batches - DO BEFORE TRAINING
@@ -217,9 +216,7 @@ val_ds = configure_for_performance(val_ds)
 # test_ds = configure_for_performance(test_ds)
 
 head_model = Model(inputs = base_model.input, outputs = predictions)
-head_model.compile(optimizer='adam', loss=losses.sparse_categorical_crossentropy, metrics=['accuracy'])
-
-# plot_model(head_model)
+head_model.compile(optimizer='adam',loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
 head_model.summary()
 
 history = head_model.fit(train_ds, batch_size=32, epochs=40, validation_data=val_ds)
