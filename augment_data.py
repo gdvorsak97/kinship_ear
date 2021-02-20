@@ -8,7 +8,7 @@ from glob import glob
 
 from tensorflow.python.data import AUTOTUNE
 from tensorflow.python.keras.applications.resnet import ResNet152
-from tensorflow.python.keras.utils.vis_utils import plot_model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import Model
 
 """
@@ -171,6 +171,9 @@ plt.show()
 # OTHER CHOICES AFTER TEST WORKS - the latter 2 aren't used as whole ears are needed
 # layers.RandomContrast, layers.RandomCrop, layers.RandomZoom
 
+image_generator = ImageDataGenerator(rescale=1./255,rotation_range=135)
+
+train_ds = image_generator.(train_ds, batch_size=32,shuffle=True) #have to switch dataset logic to flow from directory next
 
 # Add all this to model
 
