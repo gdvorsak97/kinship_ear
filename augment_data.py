@@ -56,127 +56,38 @@ plt.imshow(img)
 plt.show()
 """
 
-# define datasets
-list_ds = tf.data.Dataset.list_files(train_files, shuffle=False)
-list_ds = list_ds.shuffle(len(train_files), reshuffle_each_iteration=False)
-test_list_ds = tf.data.Dataset.list_files(test_files, shuffle=False)
-test_list_ds = list_ds.shuffle(len(test_files), reshuffle_each_iteration=False)
-
-# split train and val, make test
-val_size = int(len(train_files) * 0.2)
-train_ds = list_ds.skip(val_size)
-val_ds = list_ds.take(val_size)
-test_ds = test_list_ds.take(len(test_files))
-
-# print sizes
-print(tf.data.experimental.cardinality(train_ds).numpy())
-print(tf.data.experimental.cardinality(val_ds).numpy())
-print(tf.data.experimental.cardinality(test_ds).numpy())
-
-# define class labels
-cn = []
-for i in train_files:
-    cn.append(i.split("\\")[-2])
-class_names = np.array(sorted(cn))
-unique_classes = list(set(cn))
-num_classes = len(unique_classes)
+img_height = 224
+img_width = 224
 
 
-def get_label(file_path):
-    # convert the path to a list of path components
-    parts = tf.strings.split(file_path, os.path.sep)
-    # The second to last is the class-directory
-    one_hot = parts[-2] == class_names
-    # Integer encode the label
-    return tf.argmax(one_hot)
+def plotImages(images_arr):
+    fig, axes = plt.subplots(1, 5, figsize=(20, 20))
+    axes = axes.flatten()
+    for img, ax in zip(images_arr, axes):
+        ax.imshow(img)
+        ax.axis('off')
+    plt.tight_layout()
+    plt.show()
 
 
-img_height = 180
-img_width = 180
+image_generator = ImageDataGenerator(rescale=1. / 255, rotation_range=45, width_shift_range=.15, height_shift_range=.15,
+                                     horizontal_flip=True, zoom_range=0.5)
 
+valid_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=.20)
 
-def decode_img(img):
-    # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_jpeg(img, channels=3)
-    # resize the image to the desired size
-    img = tf.image.resize(img, [img_height, img_width])  # resize if needed
-    img = tf.cast(img, tf.uint8)
-    return img
+valid_generator = valid_datagen.flow_from_directory(train_dir, subset="validation", shuffle=True,
+                                                    target_size=(img_height, img_width))
 
+train_generator = image_generator.flow_from_directory(batch_size=32, directory=train_dir, subset="training",
+                                                      shuffle=True, target_size=(img_height, img_width))
 
-def process_path(file_path):
-    label = get_label(file_path)
-    # load the raw data from the file as a string
-    img = tf.io.read_file(file_path)
-    img = decode_img(img)
-    return img, label
+# print(train_generator.class_indices)
 
-
-# create image, label pairs
-# Set `num_parallel_calls` so multiple images are loaded/processed in parallel.
-train_ds = train_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-val_ds = val_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-test_ds = test_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-
-
-def configure_for_performance(ds):
-    ds = ds.cache()
-    ds = ds.shuffle(buffer_size=1000)
-    # ds = ds.batch(32)
-    ds = ds.prefetch(buffer_size=AUTOTUNE)
-    return ds
-
-
-image, label = next(iter(train_ds))
-
-"""
-# TEST TO SHOW IMAGE - WORKING
-plt.imshow(image)
-plt.show()
-"""
-
-# AUGMENTATION START
-resize_and_rescale = tf.keras.Sequential([
-    layers.experimental.preprocessing.Resizing(img_height, img_width),
-    layers.experimental.preprocessing.Rescaling(1. / 255)
-])
-
-"""
-# test - WORKS BUT SET SIZE AND CHECK ALL
-result = resize_and_rescale(image)
-plt.imshow(result)
-plt.show()
-"""
-
-data_augmentation = tf.keras.Sequential([
-    layers.experimental.preprocessing.RandomFlip("horizontal_and_vertical"),
-    layers.experimental.preprocessing.RandomRotation(0.3),
-    layers.experimental.preprocessing.RandomContrast([0.5, 1.5])
-])
-
-# Add the image to a batch
-# image = tf.expand_dims(image, 0)
-
-"""
-# Test
-plt.figure(figsize=(10, 10))
-for i in range(12):
-    augmented_image = data_augmentation(image)
-    ax = plt.subplot(3, 4, i + 1)
-    plt.imshow(augmented_image[0])
-    plt.axis("off")
-plt.show()
-"""
-
-# OTHER CHOICES AFTER TEST WORKS - the latter 2 aren't used as whole ears are needed
-# layers.RandomContrast, layers.RandomCrop, layers.RandomZoom
-
-image_generator = ImageDataGenerator(rescale=1./255,rotation_range=135)
-
-train_ds = image_generator.(train_ds, batch_size=32,shuffle=True) #have to switch dataset logic to flow from directory next
+labels = '\n'.join(sorted(train_generator.class_indices.keys()))
+with open('labels.txt', 'w') as f:
+    f.write(labels)
 
 # Add all this to model
-
 base_model = ResNet152(weights='imagenet', include_top=False, input_shape=(img_height, img_width, 3))
 
 for layer in base_model.layers:
@@ -184,53 +95,26 @@ for layer in base_model.layers:
 
 x = layers.Flatten()(base_model.output)
 x = layers.Dense(1000, activation='relu')(x)
-predictions = layers.Dense(num_classes, activation='softmax')(x)
+predictions = layers.Dense(train_generator.num_classes, activation='softmax')(x)
 
-
-# modify datasets
-def prepare(ds, shuffle=False, augment=False):
-    # Resize and rescale all datasets
-    ds = ds.map(lambda x, y: (resize_and_rescale(x), y),
-                num_parallel_calls=AUTOTUNE)
-
-    if shuffle:
-        ds = ds.shuffle(1000)
-
-    # Batch all datasets
-    ds = ds.batch(32)
-
-    # Use data augmentation only on the training set
-    if augment:
-        ds = ds.map(lambda x, y: (data_augmentation(x, training=True), y),
-                    num_parallel_calls=AUTOTUNE)
-
-    # Use buffered prefecting on all datasets
-    return ds.prefetch(buffer_size=AUTOTUNE)
-
-
-train_ds = prepare(train_ds, shuffle=True, augment=True)
-val_ds = prepare(val_ds)
-test_ds = prepare(test_ds)
-
-
-# well shuffled data, batches - DO BEFORE TRAINING
-train_ds = configure_for_performance(train_ds)
-val_ds = configure_for_performance(val_ds)
-# test_ds = configure_for_performance(test_ds)
-
-head_model = Model(inputs = base_model.input, outputs = predictions)
-head_model.compile(optimizer='adam',loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
+head_model = Model(inputs=base_model.input, outputs=predictions)
+head_model.compile(optimizer='adam', loss='categorical_crossentropy',
+                   metrics=['accuracy'])
 head_model.summary()
 
-history = head_model.fit(train_ds, batch_size=32, epochs=40, validation_data=val_ds)
+steps_per_epoch = np.ceil(train_generator.samples / train_generator.batch_size)
+val_steps_per_epoch = np.ceil(valid_generator.samples / valid_generator.batch_size)
 
-fig, axs = plt.subplots(2, 1, figsize=(15,15))
+history = head_model.fit(train_generator, epochs=100, steps_per_epoch=steps_per_epoch, validation_data=valid_generator,
+                         validation_steps=val_steps_per_epoch)
+
+fig, axs = plt.subplots(2, 1, figsize=(15, 15))
 axs[0].plot(history.history['loss'])
 axs[0].plot(history.history['val_loss'])
 axs[0].title.set_text('Training Loss vs Validation Loss')
 axs[0].set_xlabel('Epochs')
 axs[0].set_ylabel('Loss')
-axs[0].legend(['Train','Val'])
+axs[0].legend(['Train', 'Val'])
 axs[1].plot(history.history['accuracy'])
 axs[1].plot(history.history['val_accuracy'])
 axs[1].title.set_text('Training Accuracy vs Validation Accuracy')
