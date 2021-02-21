@@ -1,19 +1,15 @@
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from tensorflow.keras import layers
-
-import tensorflow as tf
 from glob import glob
 
-from tensorflow.python.data import AUTOTUNE
-from tensorflow.python.keras.applications.resnet import ResNet152
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
+import numpy as np
 from tensorflow.keras import Model
+from tensorflow.keras import layers
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.python.keras.applications.resnet import ResNet152
 
 """
-TAKEN FROM load: https://www.tensorflow.org/tutorials/load_data/images#using_tfdata_for_finer_control
-        augment: https://www.tensorflow.org/tutorials/images/data_augmentation#apply_augmentation_to_a_dataset
+TAKEN FROM augment: https://medium.com/mlait/image-data-augmentation-image-processing-in-tensorflow-part-2-b77237256df0
+        apply to model: https://medium.com/analytics-vidhya/how-to-do-image-classification-on-custom-dataset-using-tensorflow-52309666498e
         resnet training: https://medium.com/swlh/resnet-with-tensorflow-transfer-learning-13ff0773cf0c
 """
 
@@ -44,16 +40,6 @@ print("size after removal of imposters " + str(len(test_files)))
 for i in test_files:
     train_files.append(i)
 # print(len(train_files))
-"""
-
-"""
-Test to check that images are shown after resize
-img = tf.io.read_file(test_files[0])
-img = tf.image.decode_jpeg(img, channels=3)
-img = tf.image.resize(img, [180,180])
-img = tf.cast(img, tf.uint8)
-plt.imshow(img)
-plt.show()
 """
 
 img_height = 224
@@ -124,8 +110,5 @@ axs[1].legend(['Train', 'Val'])
 
 fig.show()
 
-head_model.save("model.h5")
-
 # USE model.save! to get the augmentation steps in place and load it into the next step.
-# try to save the datasets as well
-print("end")
+head_model.save("model.h5")
