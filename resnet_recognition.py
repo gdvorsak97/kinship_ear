@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorflow.keras import Model
 from tensorflow.keras import layers
+from tensorflow.keras import losses
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.applications.resnet import ResNet152
+from tensorflow.python.keras.callbacks import ReduceLROnPlateau
 
 """
 TAKEN FROM augment: https://medium.com/mlait/image-data-augmentation-image-processing-in-tensorflow-part-2-b77237256df0
@@ -56,8 +58,8 @@ def plotImages(images_arr):
     plt.show()
 
 
-image_generator = ImageDataGenerator(rescale=1. / 255, rotation_range=45, width_shift_range=.15, height_shift_range=.15,
-                                     horizontal_flip=True, zoom_range=0.5)
+image_generator = ImageDataGenerator(rescale=1. / 255, width_shift_range=.15,rotation_range=45, height_shift_range=.15,
+                                     horizontal_flip=True, zoom_range=0.2)
 
 valid_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=.20)
 
@@ -91,8 +93,13 @@ head_model.summary()
 steps_per_epoch = np.ceil(train_generator.samples / train_generator.batch_size)
 val_steps_per_epoch = np.ceil(valid_generator.samples / valid_generator.batch_size)
 
+reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=10)
+
+callbacks_list = [reduce_on_plateau]
+
+
 history = head_model.fit(train_generator, epochs=100, steps_per_epoch=steps_per_epoch, validation_data=valid_generator,
-                         validation_steps=val_steps_per_epoch)
+                         validation_steps=val_steps_per_epoch, callbacks=callbacks_list)
 
 fig, axs = plt.subplots(2, 1, figsize=(15, 15))
 axs[0].plot(history.history['loss'])
