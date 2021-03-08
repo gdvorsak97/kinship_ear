@@ -152,6 +152,10 @@ def baseline_model():
     base_model = load_model("model_resnet_rec_ears.h5")
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
+    # remove last 2 layers
+    base_model.layers.pop()
+    base_model.layers.pop()
+
     # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
     #    x.trainable = False
 
@@ -163,8 +167,8 @@ def baseline_model():
     # x_dot = Dot(axes=[2, 2], normalize=True)([x1_, x2_])
     # x_dot = Flatten()(x_dot)
 
-    x1 = Concatenate(axis=-1)([GlobalMaxPool2D()(x1), GlobalAvgPool2D()(x1)])
-    x2 = Concatenate(axis=-1)([GlobalMaxPool2D()(x2), GlobalAvgPool2D()(x2)])
+    # x1 = Concatenate(axis=-1)([GlobalMaxPool2D()(x1), GlobalAvgPool2D()(x1)])
+    # x2 = Concatenate(axis=-1)([GlobalMaxPool2D()(x2), GlobalAvgPool2D()(x2)])
     x3 = Subtract()([x1, x2])
     x3 = Multiply()([x3, x3])
     x = Multiply()([x1, x2])
