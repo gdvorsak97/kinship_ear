@@ -123,4 +123,4 @@ axs[1].legend(['Train', 'Val'])
 fig.show()
 
 # USE model.save! to get the augmentation steps in place and load it into the next step.
-head_model.save("model.h5")
+head_model.save("model_resnet_rec_ears.h5")
