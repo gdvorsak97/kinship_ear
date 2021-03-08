@@ -7,7 +7,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import losses
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.python.keras.applications.resnet import ResNet152
-from tensorflow.python.keras.callbacks import ReduceLROnPlateau
+from tensorflow.python.keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
 
 """
 TAKEN FROM augment: https://medium.com/mlait/image-data-augmentation-image-processing-in-tensorflow-part-2-b77237256df0
@@ -58,7 +58,7 @@ def plotImages(images_arr):
     plt.show()
 
 
-image_generator = ImageDataGenerator(rescale=1. / 255, width_shift_range=.15,rotation_range=45, height_shift_range=.15,
+image_generator = ImageDataGenerator(rescale=1. / 255, width_shift_range=.15, rotation_range=45, height_shift_range=.15,
                                      horizontal_flip=True, zoom_range=0.2)
 
 valid_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=.20)
@@ -66,7 +66,7 @@ valid_datagen = ImageDataGenerator(rescale=1. / 255, validation_split=.20)
 valid_generator = valid_datagen.flow_from_directory(train_dir, subset="validation", shuffle=True,
                                                     target_size=(img_height, img_width))
 
-train_generator = image_generator.flow_from_directory(batch_size=32, directory=train_dir, subset="training",
+train_generator = image_generator.flow_from_directory(batch_size=8, directory=train_dir, subset="training",
                                                       shuffle=True, target_size=(img_height, img_width))
 
 # print(train_generator.class_indices)
@@ -78,8 +78,8 @@ with open('labels.txt', 'w') as f:
 # Add all this to model
 base_model = ResNet152(weights='imagenet', include_top=False, input_shape=(img_height, img_width, 3))
 
-for layer in base_model.layers:
-    layer.trainable = False
+# for layer in base_model.layers:
+#    layer.trainable = False
 
 x = layers.Flatten()(base_model.output)
 x = layers.Dense(1000, activation='relu')(x)
@@ -93,13 +93,18 @@ head_model.summary()
 steps_per_epoch = np.ceil(train_generator.samples / train_generator.batch_size)
 val_steps_per_epoch = np.ceil(valid_generator.samples / valid_generator.batch_size)
 
+file_path = "weights.h5"
+
 reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=10)
+checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
 
-callbacks_list = [reduce_on_plateau]
+callbacks_list = [checkpoint,reduce_on_plateau]
 
-
-history = head_model.fit(train_generator, epochs=100, steps_per_epoch=steps_per_epoch, validation_data=valid_generator,
+head_model.load_weights("weights_at_finish.h5")
+history = head_model.fit(train_generator, batch_size=8, epochs=100, steps_per_epoch=steps_per_epoch,
+                         validation_data=valid_generator,
                          validation_steps=val_steps_per_epoch, callbacks=callbacks_list)
+head_model.save_weights("weights_at_finish.h5")
 
 fig, axs = plt.subplots(2, 1, figsize=(15, 15))
 axs[0].plot(history.history['loss'])
