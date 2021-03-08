@@ -188,8 +188,7 @@ def baseline_model():
 n_epochs = 25
 n_steps_per_epoch = 30
 n_val_steps = 10
-key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
-file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/vgg_face_" + key + ".h5"
+file_path = "weights_resnet_kin.h5"
 
 # callback to save weights
 checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
@@ -197,13 +196,13 @@ checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
 # reduce rate when learning stagnates
 reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=20, verbose=1)
 
-callbacks_list = [checkpoint, reduce_on_plateau]
-# callbacks_list = [reduce_on_plateau]
+#callbacks_list = [checkpoint, reduce_on_plateau]
+callbacks_list = [reduce_on_plateau]
 
 model = baseline_model()
 
 # model.load_weights(file_path)
-baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=16), use_multiprocessing=False,
+baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=2), use_multiprocessing=False,
                              validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs,
                              verbose=2,
                              workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
@@ -238,4 +237,4 @@ for batch in tqdm(chunker(results.img_pair.values)):
 # output
 results['is_related'] = predictions
 
-results.to_csv("vgg_face_results" + key + ".csv", index=False)
+results.to_csv("resnet_kinship_results.csv", index=False)
