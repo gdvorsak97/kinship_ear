@@ -15,19 +15,24 @@ from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from keras_vggface.utils import preprocess_input
-from keras_vggface.vggface import VGGFace
 import matplotlib as mpl
 
 mpl.rcParams['figure.figsize'] = (12, 10)
 
 train_file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train_list.csv"
 train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train/"
-val_famillies = "family10"  # validation images, list families to separate train, test
+val_famillies = ["family10", "family4"]  # validation images, list families to separate train, test
 
 all_images = glob(train_folders_path + '/*/*/*.jpg')
 all_images = [x.replace("\\", "/") for x in all_images]
-train_images = [x for x in all_images if val_famillies not in x]  # all except families in val_families
-val_images = [x for x in all_images if val_famillies in x]  # all images not in validation set
+train_images = []
+val_images = []
+for x in all_images:
+    for i in range(len(val_famillies)):
+        if val_famillies[i] not in x:
+            train_images.append(x)
+        elif val_famillies[i] in x:
+            val_images.append(x)
 
 # dictionary for a map of person:image
 train_person_to_images_map = defaultdict(list)
@@ -49,8 +54,16 @@ relationships = list(zip(relationships.p1.values, relationships.p2.values))
 relationships = [x for x in relationships if x[0] in ppl and x[1] in ppl]
 
 # get train and val relationship list
-train = [x for x in relationships if val_famillies not in x[0]]
-val = [x for x in relationships if val_famillies in x[0]]
+train = []
+val = []
+
+for i in range(len(val_famillies)):
+    for x in relationships:
+        if val_famillies[i] not in x[0]:
+            train.append(x)
+        elif val_famillies[i] in x[0]:
+            val.append(x)
+
 
 METRICS = [
     keras.metrics.TruePositives(name='tp'),
@@ -140,8 +153,7 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-# There are 17 layers with trainable parameters
-layers_to_freeze_b2f = -6
+layers_to_freeze_b2f = -50
 
 
 # Straightforward, generate model as described in the post
@@ -152,12 +164,8 @@ def baseline_model():
     base_model = load_model("model_resnet_rec_ears.h5")
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
-    # remove last 2 layers
-    base_model.layers.pop()
-    base_model.layers.pop()
-
-    # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
-    #    x.trainable = False
+    for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
+       x.trainable = False
 
     x1 = base_model(input_1)
     x2 = base_model(input_2)
@@ -178,6 +186,8 @@ def baseline_model():
     x = Dropout(0.01)(x)
     out = Dense(1, activation="sigmoid")(x)
 
+    base_model.summary()
+
     model = Model([input_1, input_2], out)
     model.compile(loss="binary_crossentropy", metrics=METRICS, optimizer=Adam(0.00001))
     model.summary()
@@ -185,9 +195,9 @@ def baseline_model():
     return model
 
 
-n_epochs = 25
-n_steps_per_epoch = 30
-n_val_steps = 10
+n_epochs = 100
+n_steps_per_epoch = 255
+n_val_steps = 32
 file_path = "weights_resnet_kin.h5"
 
 # callback to save weights
@@ -196,7 +206,7 @@ checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
 # reduce rate when learning stagnates
 reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=20, verbose=1)
 
-#callbacks_list = [checkpoint, reduce_on_plateau]
+# callbacks_list = [checkpoint, reduce_on_plateau]
 callbacks_list = [reduce_on_plateau]
 
 model = baseline_model()
@@ -204,7 +214,6 @@ model = baseline_model()
 # model.load_weights(file_path)
 baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=2), use_multiprocessing=False,
                              validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs,
-                             verbose=2,
                              workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
                              validation_steps=n_val_steps)
 
