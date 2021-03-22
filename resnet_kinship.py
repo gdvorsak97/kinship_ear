@@ -171,21 +171,11 @@ def baseline_model():
     x1 = base_model(input_1)
     x2 = base_model(input_2)
 
-    # x1_ = Reshape(target_shape=(7*7, 2048))(x1)
-    # x2_ = Reshape(target_shape=(7*7, 2048))(x2)
-    # x_dot = Dot(axes=[2, 2], normalize=True)([x1_, x2_])
-    # x_dot = Flatten()(x_dot)
+    x = Concatenate(axis=-1)([x1, x2])
 
-    # x1 = Concatenate(axis=-1)([GlobalMaxPool2D()(x1), GlobalAvgPool2D()(x1)])
-    # x2 = Concatenate(axis=-1)([GlobalMaxPool2D()(x2), GlobalAvgPool2D()(x2)])
-    x3 = Subtract()([x1, x2])
-    x3 = Multiply()([x3, x3])
-    x = Multiply()([x1, x2])
-    x = Concatenate(axis=-1)([x, x3])
-
-    x = Dense(100, activation="relu")(x)
-    x = Dropout(0.01)(x)
-    out = Dense(1, activation="sigmoid")(x)
+    x = Dense(1000, activation="relu")(x)
+    # x = Dropout(0.01)(x)
+    out = Dense(1, activation="softmax")(x)
 
     base_model.summary()
 
