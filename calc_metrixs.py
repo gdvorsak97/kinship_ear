@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.metrics import confusion_matrix, accuracy_score, roc_curve, roc_auc_score
 import matplotlib.pyplot as plt
@@ -21,16 +22,17 @@ results = pd.read_csv(filename)
 pred = list(results['is_related'])
 truth = list(results['ground_truth'])
 
+c_pred = np.zeros(len(pred))
 
 # first define what is binary
 for i in range(len(pred)):
     if pred[i] >= 0.5:
-        pred[i] = 1
+        c_pred[i] = 1
     else:
-        pred[i] = 0
+        c_pred[i] = 0
 
-cm = confusion_matrix(truth, pred)
-ca = accuracy_score(truth, pred)
+cm = confusion_matrix(truth, c_pred)
+ca = accuracy_score(truth, c_pred)
 auc = roc_auc_score(truth, pred)
 
 print(cm)

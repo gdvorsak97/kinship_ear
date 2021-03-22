@@ -153,7 +153,7 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-layers_to_freeze_b2f = -50
+layers_to_freeze_b2f = -300
 
 
 # Straightforward, generate model as described in the post
@@ -164,6 +164,7 @@ def baseline_model():
     base_model = load_model("model_resnet_rec_ears.h5")
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
+    # 518 total layers
     for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
        x.trainable = False
 
