@@ -1,21 +1,20 @@
 from collections import defaultdict
 from glob import glob
-
-import keras
-import pandas as pd
-import cv2
-import numpy as np
 from random import choice, sample
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 
+import cv2
+import keras
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from keras_vggface.utils import preprocess_input
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D, Concatenate, Multiply, Dropout, \
-    Subtract
+from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
-from keras_vggface.utils import preprocess_input
-import matplotlib as mpl
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom
+from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
 
@@ -63,7 +62,6 @@ for i in range(len(val_famillies)):
             train.append(x)
         elif val_famillies[i] in x[0]:
             val.append(x)
-
 
 METRICS = [
     keras.metrics.TruePositives(name='tp'),
@@ -165,11 +163,22 @@ def baseline_model():
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
     # 518 total layers
-    for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
-       x.trainable = False
+    # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
+        # x.trainable = False
 
-    x1 = base_model(input_1)
-    x2 = base_model(input_2)
+    # Add rescale? - ear training had it at .255
+
+    x1 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_1)
+    x2 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_2)
+
+    x1 = RandomRotation(factor=0.125, fill_mode='nearest')(x1)
+    x2 = RandomRotation(factor=0.125, fill_mode='nearest')(x2)
+
+    x1 = RandomZoom(width_factor=0.2, height_factor=0.2, fill_mode='nearest')(x1)
+    x2 = RandomZoom(width_factor=0.2, height_factor=0.2, fill_mode='nearest')(x2)
+
+    x1 = base_model(x1)
+    x2 = base_model(x2)
 
     x = Concatenate(axis=-1)([x1, x2])
 
