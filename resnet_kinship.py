@@ -13,7 +13,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
-from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Dropout
 from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
@@ -182,9 +182,9 @@ def baseline_model():
 
     x = Concatenate(axis=-1)([x1, x2])
 
-    x = Dense(1000, activation="relu")(x)
+    x = Dense(322, activation="relu")(x)
     # x = Dropout(0.01)(x)
-    out = Dense(1, activation="softmax")(x)
+    out = Dense(1, activation="sigmoid")(x)
 
     base_model.summary()
 
