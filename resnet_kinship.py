@@ -115,13 +115,15 @@ rescale = Sequential([
   Rescaling(1./255)
 ])
 
+
 # read images
 def read_img(path):
     img = cv2.imread(path)
     img = cv2.resize(img, (224, 224))
     img = rescale(img)
     img = np.array(img, dtype="float64")
-    return preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
+    return img
+    # return preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
 
 
 # generator of labels for pairs
@@ -199,8 +201,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 1
-n_steps_per_epoch = 25
+n_epochs = 100
+n_steps_per_epoch = 250
 n_val_steps = 32
 file_path = "weights_resnet_kin.h5"
 
