@@ -13,7 +13,8 @@ from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
-from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Dropout
+from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Dropout, Rescaling
 from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
@@ -110,12 +111,17 @@ def plot_metrics(history):
     plt.show()
 
 
+rescale = Sequential([
+  Rescaling(1./255)
+])
+
 # read images
 def read_img(path):
     img = cv2.imread(path)
     img = cv2.resize(img, (224, 224))
+    img = rescale(img)
     img = np.array(img, dtype="float64")
-    return preprocess_input(img, version=1)  # 1 for VGG, 2 otherwise
+    return preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
 
 
 # generator of labels for pairs
@@ -151,7 +157,7 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-layers_to_freeze_b2f = -300
+layers_to_freeze_f2b = 250
 
 
 # Straightforward, generate model as described in the post
@@ -163,10 +169,8 @@ def baseline_model():
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
     # 518 total layers
-    # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
-        # x.trainable = False
-
-    # Add rescale? - ear training had it at .255
+    for x in base_model.layers[layers_to_freeze_f2b:]:  # Freeze layers here - experiment with the num
+        x.trainable = False
 
     x1 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_1)
     x2 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_2)
@@ -195,8 +199,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 100
-n_steps_per_epoch = 255
+n_epochs = 1
+n_steps_per_epoch = 25
 n_val_steps = 32
 file_path = "weights_resnet_kin.h5"
 
