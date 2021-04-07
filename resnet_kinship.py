@@ -120,10 +120,10 @@ rescale = Sequential([
 def read_img(path):
     img = cv2.imread(path)
     img = cv2.resize(img, (224, 224))
-    img = rescale(img)
     img = np.array(img, dtype="float64")
+    img = preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
+    img = rescale(img)
     return img
-    # return preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
 
 
 # generator of labels for pairs
@@ -159,7 +159,7 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-layers_to_freeze_f2b = 250
+layers_to_freeze_f2b = 350
 
 
 # Straightforward, generate model as described in the post
@@ -171,8 +171,8 @@ def baseline_model():
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
     # 518 total layers
-    for x in base_model.layers[layers_to_freeze_f2b:]:  # Freeze layers here - experiment with the num
-        x.trainable = False
+    # for x in base_model.layers[layers_to_freeze_f2b:]:  # Freeze layers here - experiment with the num
+    #   x.trainable = False
 
     x1 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_1)
     x2 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_2)
