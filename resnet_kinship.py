@@ -1,6 +1,7 @@
 from collections import defaultdict
 from glob import glob
 from random import choice, sample
+import numpy as np
 
 import cv2
 import keras
@@ -14,7 +15,8 @@ from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Dropout, Rescaling
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Rescaling, Cropping2D, \
+    Resizing
 from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
@@ -189,7 +191,6 @@ def baseline_model():
     x = Concatenate(axis=-1)([x1, x2])
 
     x = Dense(322, activation="relu")(x)
-    # x = Dropout(0.01)(x)
     out = Dense(1, activation="sigmoid")(x)
 
     base_model.summary()
@@ -217,8 +218,28 @@ callbacks_list = [reduce_on_plateau]
 
 model = baseline_model()
 
+img_gen = gen(train, train_person_to_images_map, batch_size=2)
+input_image = img_gen.__next__()
+input_image = input_image[0][0]
+crop = Sequential([
+    Cropping2D(cropping=((0, 0), (224 - int(np.round(224/3)), 0)), input_shape=(224, 224, 3)),
+    Resizing(224, 224)
+    ])
+outputs_cropped = crop(input_image)
+
+
+# Visualize input and output
+fig, axes = plt.subplots(1, 2)
+axes[0].imshow(input_image[0, :, :, :])
+axes[0].set_title('Original image')
+axes[1].imshow(outputs_cropped[0, :, :, :])
+axes[1].set_title('Cropped input')
+fig.suptitle(f'Original and cropped input')
+fig.set_size_inches(9, 5, forward=True)
+plt.show()
+
 # model.load_weights(file_path)
-baseline_history = model.fit(gen(train, train_person_to_images_map, batch_size=2), use_multiprocessing=False,
+baseline_history = model.fit(img_gen, use_multiprocessing=False,
                              validation_data=gen(val, val_person_to_images_map, batch_size=5), epochs=n_epochs,
                              workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
                              validation_steps=n_val_steps)
