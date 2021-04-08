@@ -1,7 +1,6 @@
 from collections import defaultdict
 from glob import glob
 from random import choice, sample
-import numpy as np
 
 import cv2
 import keras
@@ -15,8 +14,7 @@ from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Rescaling, Cropping2D, \
-    Resizing
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Rescaling
 from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
@@ -118,10 +116,40 @@ rescale = Sequential([
 ])
 
 
+def visualize_crop(in_img, crp_img):
+    fig, axes = plt.subplots(1, 2)
+    axes[0].imshow(in_img[:, :, :])
+    axes[0].set_title('Original image')
+    axes[1].imshow(crp_img[:, :, :])
+    axes[1].set_title('Cropped input')
+    fig.suptitle(f'Original and cropped input')
+    fig.set_size_inches(9, 5, forward=True)
+    plt.show()
+
+
+def crop_ears(img, region):
+    if region == "left":
+        img = img[:, 0:int(np.round(224 / 3))]
+    elif region == "right":
+        img = img[:, -int(np.round(224 / 3)):]
+    elif region == "mid_vertical":
+        img = img[:, int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3))]
+    elif region == "top":
+        img = img[0:int(np.round(224 / 3)), :]
+    elif region == "mid_horizontal":
+        img = img[int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3)), :]
+    elif region == "bottom":
+        img = img[-int(np.round(224 / 3)):, :]
+    return img
+
+
 # read images
 def read_img(path):
-    img = cv2.imread(path)
+    in_img = cv2.imread(path)
+    in_img = cv2.resize(in_img, (224, 224))
+    img = crop_ears(in_img, "left")
     img = cv2.resize(img, (224, 224))
+    # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
     img = preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
     img = rescale(img)
@@ -219,24 +247,6 @@ callbacks_list = [reduce_on_plateau]
 model = baseline_model()
 
 img_gen = gen(train, train_person_to_images_map, batch_size=2)
-input_image = img_gen.__next__()
-input_image = input_image[0][0]
-crop = Sequential([
-    Cropping2D(cropping=((0, 0), (224 - int(np.round(224/3)), 0)), input_shape=(224, 224, 3)),
-    Resizing(224, 224)
-    ])
-outputs_cropped = crop(input_image)
-
-
-# Visualize input and output
-fig, axes = plt.subplots(1, 2)
-axes[0].imshow(input_image[0, :, :, :])
-axes[0].set_title('Original image')
-axes[1].imshow(outputs_cropped[0, :, :, :])
-axes[1].set_title('Cropped input')
-fig.suptitle(f'Original and cropped input')
-fig.set_size_inches(9, 5, forward=True)
-plt.show()
 
 # model.load_weights(file_path)
 baseline_history = model.fit(img_gen, use_multiprocessing=False,
