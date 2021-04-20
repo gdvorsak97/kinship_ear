@@ -117,6 +117,8 @@ rescale = Sequential([
 
 
 def visualize_crop(in_img, crp_img):
+    in_img = cv2.cvtColor(in_img, cv2.COLOR_BGR2RGB)
+    crp_img = cv2.cvtColor(crp_img, cv2.COLOR_BGR2RGB)
     fig, axes = plt.subplots(1, 2)
     axes[0].imshow(in_img[:, :, :])
     axes[0].set_title('Original image')
@@ -126,6 +128,31 @@ def visualize_crop(in_img, crp_img):
     fig.set_size_inches(9, 5, forward=True)
     plt.show()
 
+
+# after it works for generator, do a loop over all images copy folder to make sure every picture is aligned
+def alignment(image, path):
+    boxes_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\predictions-boundingbox.txt"
+    # read the list and check if file is listed
+    file = open(boxes_path, "r")
+    lines = [i for i in file.readlines() if i.split()[0] != "filename"]
+    names = np.array([i.split()[0] for i in lines])
+    # print(lines)
+    # print(names)
+    search = path.split('/')[-1][:-4]
+    idx = np.where(names == search)
+    if np.any(idx[0]):
+        for i in idx[0]:
+            print(i)
+            # now get the borders from the lines and crop, display if OK write into a different file
+    else:
+        print("empty")
+        # means there is no entry, need to make click based bounding box, try one from ris majstri repo
+        # then write into the different file
+    file.close()
+
+    # if yes, change from 512 to 224 and check if visual is ok, if i press a key it should be overwriten
+    # or just used in comp but how will I know it for new images
+    # if no mAke a test and then commit it into the list
 
 def crop_ears(img, region):
     if region == "left":
@@ -146,8 +173,9 @@ def crop_ears(img, region):
 # read images
 def read_img(path):
     in_img = cv2.imread(path)
+    alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    img = crop_ears(in_img, "left")
+    img = crop_ears(in_img, "bottom")
     img = cv2.resize(img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
