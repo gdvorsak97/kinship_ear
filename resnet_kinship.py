@@ -112,7 +112,7 @@ def plot_metrics(history):
 
 
 rescale = Sequential([
-  Rescaling(1./255)
+    Rescaling(1. / 255)
 ])
 
 
@@ -131,6 +131,8 @@ def visualize_crop(in_img, crp_img):
 
 # after it works for generator, do a loop over all images copy folder to make sure every picture is aligned
 def alignment(image, path):
+    """
+    image = cv2.resize(image, (512, 512))
     boxes_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\predictions-boundingbox.txt"
     # read the list and check if file is listed
     file = open(boxes_path, "r")
@@ -142,17 +144,31 @@ def alignment(image, path):
     idx = np.where(names == search)
     if np.any(idx[0]):
         for i in idx[0]:
-            print(i)
             # now get the borders from the lines and crop, display if OK write into a different file
+            bounds = lines[i].split()[1:]
+            bounds = bounds[0].split(',')
+            bounds = [int(i) for i in bounds]
+
+            dx = int(np.round(image.shape[0]/512))
+            dy = int(np.round(image.shape[1]/512))
+            bounds[0] = bounds[0] * dx
+            bounds[1] = bounds[1] * dy
+            bounds[2] = bounds[2] * dx
+            bounds[3] = bounds[3] * dy
+
+
+            cv2.rectangle(image, (bounds[1], bounds[0]), (bounds[1]+bounds[3],bounds[0]+bounds[2]), (0,0,255), -1)
+            cv2.imshow("Detected", image)
+            cv2.waitKey()
+            cv2.imwrite("example.png", image)
     else:
         print("empty")
         # means there is no entry, need to make click based bounding box, try one from ris majstri repo
         # then write into the different file
     file.close()
+    """
 
-    # if yes, change from 512 to 224 and check if visual is ok, if i press a key it should be overwriten
-    # or just used in comp but how will I know it for new images
-    # if no mAke a test and then commit it into the list
+
 
 def crop_ears(img, region):
     if region == "left":
