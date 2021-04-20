@@ -132,7 +132,7 @@ def visualize_crop(in_img, crp_img):
 # after it works for generator, do a loop over all images copy folder to make sure every picture is aligned
 def alignment(image, path):
     """
-    image = cv2.resize(image, (512, 512))
+    # image = cv2.resize(image, (512, 512))
     boxes_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\predictions-boundingbox.txt"
     # read the list and check if file is listed
     file = open(boxes_path, "r")
@@ -189,7 +189,7 @@ def crop_ears(img, region):
 # read images
 def read_img(path):
     in_img = cv2.imread(path)
-    alignment(in_img, path)
+    # alignment(in_img, path) when list is done manually this will work
     in_img = cv2.resize(in_img, (224, 224))
     img = crop_ears(in_img, "bottom")
     img = cv2.resize(img, (224, 224))
