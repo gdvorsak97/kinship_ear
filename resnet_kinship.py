@@ -130,44 +130,24 @@ def visualize_crop(in_img, crp_img):
 
 
 # after it works for generator, do a loop over all images copy folder to make sure every picture is aligned
-def alignment(image, path):
-    """
-    # image = cv2.resize(image, (512, 512))
-    boxes_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\predictions-boundingbox.txt"
-    # read the list and check if file is listed
-    file = open(boxes_path, "r")
-    lines = [i for i in file.readlines() if i.split()[0] != "filename"]
-    names = np.array([i.split()[0] for i in lines])
-    # print(lines)
-    # print(names)
-    search = path.split('/')[-1][:-4]
-    idx = np.where(names == search)
-    if np.any(idx[0]):
-        for i in idx[0]:
-            # now get the borders from the lines and crop, display if OK write into a different file
-            bounds = lines[i].split()[1:]
-            bounds = bounds[0].split(',')
-            bounds = [int(i) for i in bounds]
+def alignment(image, path, visualize=False, save=False):
 
-            dx = int(np.round(image.shape[0]/512))
-            dy = int(np.round(image.shape[1]/512))
-            bounds[0] = bounds[0] * dx
-            bounds[1] = bounds[1] * dy
-            bounds[2] = bounds[2] * dx
-            bounds[3] = bounds[3] * dy
+    label_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment\\"
+    delete_ist_path = label_path + "delete list.txt"
 
-
-            cv2.rectangle(image, (bounds[1], bounds[0]), (bounds[1]+bounds[3],bounds[0]+bounds[2]), (0,0,255), -1)
-            cv2.imshow("Detected", image)
-            cv2.waitKey()
-            cv2.imwrite("example.png", image)
-    else:
-        print("empty")
-        # means there is no entry, need to make click based bounding box, try one from ris majstri repo
-        # then write into the different file
-    file.close()
-    """
-
+    family = path.split("/")[-3]
+    filename = path.split("/")[-1]
+    label_path += "labels " + str(family) + ".csv"
+    label_file = pd.read_csv(label_path)
+    bbox_data = label_file[label_file['file'] == filename]
+    bbox = image[int(bbox_data['y1']):int(bbox_data['y1']) + int(bbox_data['dy']),
+           int(bbox_data['x1']):int(bbox_data['x1']) + int(bbox_data['dx'])]
+    if visualize:
+        cv2.imshow("Detected", bbox)
+        cv2.waitKey()
+    if save:
+        cv2.imwrite("example.png", bbox)
+    return bbox
 
 
 def crop_ears(img, region):
@@ -189,10 +169,10 @@ def crop_ears(img, region):
 # read images
 def read_img(path):
     in_img = cv2.imread(path)
-    # alignment(in_img, path) when list is done manually this will work
+    in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    img = crop_ears(in_img, "bottom")
-    img = cv2.resize(img, (224, 224))
+    # img = crop_ears(in_img, "bottom")
+    img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
     img = preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
@@ -277,7 +257,7 @@ def baseline_model():
 n_epochs = 100
 n_steps_per_epoch = 250
 n_val_steps = 32
-file_path = "weights_resnet_kin.h5"
+file_path = "weights_resnet_kin_best.h5"
 
 # callback to save weights
 checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
@@ -300,6 +280,9 @@ baseline_history = model.fit(img_gen, use_multiprocessing=False,
 
 # plot_loss(baseline_history, "Baseline", 0)
 plot_metrics(baseline_history)
+
+model.save_weights("weights_resnet_kin_finish.h5")
+
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
