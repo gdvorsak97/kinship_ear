@@ -134,10 +134,14 @@ def alignment(image, path, visualize=False, save=False):
 
     label_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment\\"
     delete_ist_path = label_path + "delete list.txt"
-
-    family = path.split("/")[-3]
-    filename = path.split("/")[-1]
-    label_path += "labels " + str(family) + ".csv"
+    filename = ""
+    if "/" in path:
+        family = path.split("/")[-3]
+        filename = path.split("/")[-1]
+        label_path += "labels " + str(family) + ".csv"
+    elif "\\" in path:
+        filename = path.split("\\")[-1]
+        label_path = label_path + "all_labels.csv"
     label_file = pd.read_csv(label_path)
     bbox_data = label_file[label_file['file'] == filename]
     bbox = image[bbox_data['y1'].values[0]:bbox_data['y1'].values[0] + bbox_data['dy'].values[0],
