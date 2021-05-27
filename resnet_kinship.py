@@ -140,8 +140,8 @@ def alignment(image, path, visualize=False, save=False):
     label_path += "labels " + str(family) + ".csv"
     label_file = pd.read_csv(label_path)
     bbox_data = label_file[label_file['file'] == filename]
-    bbox = image[int(bbox_data['y1']):int(bbox_data['y1']) + int(bbox_data['dy']),
-           int(bbox_data['x1']):int(bbox_data['x1']) + int(bbox_data['dx'])]
+    bbox = image[bbox_data['y1'].values[0]:bbox_data['y1'].values[0] + bbox_data['dy'].values[0],
+           bbox_data['x1'].values[0]:bbox_data['x1'].values[0] + bbox_data['dx'].values[0]]
     if visualize:
         cv2.imshow("Detected", bbox)
         cv2.waitKey()
