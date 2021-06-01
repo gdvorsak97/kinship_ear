@@ -25,6 +25,29 @@ val_famillies = ["family10", "family4"]  # validation images, list families to s
 
 all_images = glob(train_folders_path + '/*/*/*.jpg')
 all_images = [x.replace("\\", "/") for x in all_images]
+all_files = [str(i).split("/")[-1][:-4] for i in all_images]
+
+# Filter step fpr bounding boxes
+delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
+              "\\delete list.txt"
+delete_file = pd.read_csv(delete_path, delimiter=";")
+FILTERS = "maj_oob, mnr_oob"
+filters = FILTERS.split(",")
+
+for i in all_files:
+    check = delete_file["filename"] == i
+    # check if there's any True values, if yes than delete the index in all_images if filter applies
+    check = list(np.where(check)[0])
+    if len(check) != 0:
+        d_fs = delete_file["filter"].iloc[check]
+        current_f = list(d_fs.values)
+        for f in current_f:
+            if f in filters:
+                to_delete = all_files.index(i)
+                del all_images[to_delete]
+                del all_files[to_delete]
+                break
+
 train_images = []
 val_images = []
 for x in all_images:
