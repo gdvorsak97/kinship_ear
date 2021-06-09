@@ -31,22 +31,23 @@ all_files = [str(i).split("/")[-1][:-4] for i in all_images]
 delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
               "\\delete list.txt"
 delete_file = pd.read_csv(delete_path, delimiter=";")
-FILTERS = "maj_oob, mnr_oob"
+FILTERS = "maj_oob"
 filters = FILTERS.split(",")
-
+deleted = []
 for i in all_files:
     check = delete_file["filename"] == i
-    # check if there's any True values, if yes than delete the index in all_images if filter applies
     check = list(np.where(check)[0])
     if len(check) != 0:
         d_fs = delete_file["filter"].iloc[check]
-        current_f = list(d_fs.values)
+        current_f = list(d_fs.values)[0].split(',')
         for f in current_f:
             if f in filters:
                 to_delete = all_files.index(i)
-                del all_images[to_delete]
-                del all_files[to_delete]
+                deleted.append(to_delete)
                 break
+
+# delete filtered from all images
+all_images = [all_images[i] for i in range(len(all_images)) if i not in deleted]
 
 train_images = []
 val_images = []
