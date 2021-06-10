@@ -31,8 +31,9 @@ all_files = [str(i).split("/")[-1][:-4] for i in all_images]
 delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
               "\\delete list.txt"
 delete_file = pd.read_csv(delete_path, delimiter=";")
-FILTERS = "maj_oob"
-filters = FILTERS.split(",")
+FILTERS = "blr"
+filters = FILTERS.replace(" ", "")
+filters = filters.split(",")
 deleted = []
 for i in all_files:
     check = delete_file["filename"] == i
