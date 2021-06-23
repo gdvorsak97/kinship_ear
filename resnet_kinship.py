@@ -31,7 +31,7 @@ all_files = [str(i).split("/")[-1][:-4] for i in all_images]
 delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
               "\\delete list.txt"
 delete_file = pd.read_csv(delete_path, delimiter=";")
-FILTERS = "blr"
+FILTERS = "maj_oob,mnr_oob,blr,ilu,drk,grn,lbl"
 filters = FILTERS.replace(" ", "")
 filters = filters.split(",")
 deleted = []
@@ -154,7 +154,6 @@ def visualize_crop(in_img, crp_img):
     plt.show()
 
 
-# after it works for generator, do a loop over all images copy folder to make sure every picture is aligned
 def alignment(image, path, visualize=False, save=False):
 
     label_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment\\"
@@ -200,8 +199,8 @@ def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    # img = crop_ears(in_img, "bottom")
-    img = cv2.resize(in_img, (224, 224))
+    img = crop_ears(in_img, "top")
+    img = cv2.resize(img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
     img = preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
