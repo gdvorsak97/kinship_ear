@@ -27,7 +27,7 @@ all_images = glob(train_folders_path + '/*/*/*.jpg')
 all_images = [x.replace("\\", "/") for x in all_images]
 all_files = [str(i).split("/")[-1][:-4] for i in all_images]
 
-# Filter step fpr bounding boxes
+# Filter step fOr bounding boxes
 delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
               "\\delete list.txt"
 delete_file = pd.read_csv(delete_path, delimiter=";")
@@ -256,14 +256,14 @@ def baseline_model():
     # for x in base_model.layers[layers_to_freeze_f2b:]:  # Freeze layers here - experiment with the num
     #   x.trainable = False
 
-    x1 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_1)
-    x2 = RandomTranslation(width_factor=0.20, height_factor=0.20, fill_mode='nearest')(input_2)
+    x1 = RandomTranslation(width_factor=0.10, height_factor=0.10, fill_mode='nearest')(input_1)
+    x2 = RandomTranslation(width_factor=0.10, height_factor=0.10, fill_mode='nearest')(input_2)
 
     x1 = RandomRotation(factor=0.125, fill_mode='nearest')(x1)
     x2 = RandomRotation(factor=0.125, fill_mode='nearest')(x2)
 
-    x1 = RandomZoom(width_factor=0.2, height_factor=0.2, fill_mode='nearest')(x1)
-    x2 = RandomZoom(width_factor=0.2, height_factor=0.2, fill_mode='nearest')(x2)
+    x1 = RandomZoom(width_factor=0.1, height_factor=0.1, fill_mode='nearest')(x1)
+    x2 = RandomZoom(width_factor=0.1, height_factor=0.1, fill_mode='nearest')(x2)
 
     x1 = base_model(x1)
     x2 = base_model(x2)
