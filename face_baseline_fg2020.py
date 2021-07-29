@@ -22,8 +22,8 @@ val_famillies_list = ["F09", "F04", "F08", "F06", "F02"]
 def get_train_val(familly_name):
     # train_file_path = "./input/train_relationships.csv"
     # train_folders_path = "./input/train/"
-    train_file_path = "./input/train_pairs_new.xlsx"
-    train_folders_path = "./input/train_new/"
+    train_file_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train_list.csv"
+    train_folders_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train\\"
     val_famillies = familly_name
 
     all_images = glob(train_folders_path + "*/*/*.jpg")
@@ -140,7 +140,7 @@ def baseline_model():
 model = baseline_model()
 for i in tqdm_notebook(range(len(val_famillies_list))):
     train, val, train_person_to_images_map, val_person_to_images_map = get_train_val(val_famillies_list[i])
-    file_path = "vgg_face_{}.h5".format(i)
+    file_path = "baseline_{}.h5".format(i)
     checkpoint = ModelCheckpoint(file_path, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.3, patience=30, verbose=1)
     # reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.2, patience=20, verbose=1)
@@ -153,9 +153,9 @@ for i in tqdm_notebook(range(len(val_famillies_list))):
                                   workers=1, callbacks=callbacks_list,
                                   steps_per_epoch=300, validation_steps=200)
 
-test_path = "./test/test-faces/"
+test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\test\\test-private-faces"
 
-submission = pd.read_csv('./test/test_pairs.csv')
+submission = pd.read_csv('D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\results.csv')
 
 
 def chunker(seq, size=32):
@@ -165,7 +165,7 @@ def chunker(seq, size=32):
 preds_for_sub = np.zeros(submission.shape[0])
 
 for i in tqdm_notebook(range(len(val_famillies_list))):
-    file_path = f"./vgg_face_{i}.h5"
+    file_path = f"./baseline_{i}.h5"
     model.load_weights(file_path)
     # Get the predictions
     predictions = []
@@ -180,9 +180,9 @@ for i in tqdm_notebook(range(len(val_famillies_list))):
         pred = model.predict([X1, X2]).ravel().tolist()
         predictions += pred
 
-    preds_for_sub += np.array(predictions) / len(val_famillies_list)
+    preds_for_sub += np.array(predictions) / len(val_famillies_list)  # why is this a step?
 
-submission['score'] = preds_for_sub
+submission['prediction'] = preds_for_sub
 submission.to_csv("predictions.csv", index=False)
 
 
