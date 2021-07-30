@@ -14,7 +14,7 @@ from keras.optimizers import Adam
 from keras.preprocessing import image
 from keras_vggface.utils import preprocess_input
 from keras_vggface.vggface import VGGFace
-from tqdm import tqdm_notebook
+from tqdm import tqdm
 
 val_famillies_list = ["F09", "F04", "F08", "F06", "F02"]
 
@@ -23,11 +23,12 @@ def get_train_val(familly_name):
     # train_file_path = "./input/train_relationships.csv"
     # train_folders_path = "./input/train/"
     train_file_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train_list.csv"
-    train_folders_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train\\"
+    train_folders_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train" \
+                         "\\test-public-faces\\"
     val_famillies = familly_name
 
     all_images = glob(train_folders_path + "*/*/*.jpg")
-    all_images=[x.replace('\\','/') for x in all_images]
+    all_images = [x.replace('\\', '/') for x in all_images]
     train_images = [x for x in all_images if val_famillies not in x]
     val_images = [x for x in all_images if val_famillies in x]
 
@@ -42,8 +43,10 @@ def get_train_val(familly_name):
 
     for x in val_images:
         val_person_to_images_map[x.split("/")[-3] + "/" + x.split("/")[-2]].append(x)
-    relationships = pd.read_excel(train_file_path)
-    relationships = list(zip(relationships.p1.values, relationships.p2.values))
+    relationships = pd.read_csv(train_file_path)
+    re1 = [x[:-1] for x in relationships.p1.values]
+    re2 = [x[:-1] for x in relationships.p2.values]
+    relationships = list(zip(re1, re2))
     relationships = [x for x in relationships if x[0] in ppl and x[1] in ppl]
 
     train = [x for x in relationships if val_famillies not in x[0]]
@@ -55,8 +58,10 @@ def focal_loss(gamma=2., alpha=.25):
     def focal_loss_fixed(y_true, y_pred):
         pt_1 = tf.where(tf.equal(y_true, 1), y_pred, tf.ones_like(y_pred))
         pt_0 = tf.where(tf.equal(y_true, 0), y_pred, tf.zeros_like(y_pred))
-        return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(K.epsilon()+pt_1))-K.sum((1-alpha) * K.pow( pt_0, gamma)
-                                                                                       * K.log(1. - pt_0 + K.epsilon()))
+        return -K.sum(alpha * K.pow(1. - pt_1, gamma) * K.log(K.epsilon() + pt_1)) - K.sum(
+            (1 - alpha) * K.pow(pt_0, gamma)
+            * K.log(1. - pt_0 + K.epsilon()))
+
     return focal_loss_fixed
 
 
@@ -93,6 +98,8 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         X2 = [choice(person_to_images_map[x[1]]) for x in batch_tuples]
         X2 = np.array([read_img(x) for x in X2])
 
+        labels = np.array(labels)
+
         yield [X1, X2], labels
 
 
@@ -100,7 +107,7 @@ def baseline_model():
     input_1 = Input(shape=(224, 224, 3))
     input_2 = Input(shape=(224, 224, 3))
 
-    base_model = VGGFace(model='resnet50', include_top=False)
+    base_model = VGGFace(model='resnet50', weights=None, include_top=False)
 
     for x in base_model.layers[:-3]:
         x.trainable = True
@@ -138,7 +145,7 @@ def baseline_model():
 
 
 model = baseline_model()
-for i in tqdm_notebook(range(len(val_famillies_list))):
+for i in tqdm(range(len(val_famillies_list))):
     train, val, train_person_to_images_map, val_person_to_images_map = get_train_val(val_famillies_list[i])
     file_path = "baseline_{}.h5".format(i)
     checkpoint = ModelCheckpoint(file_path, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
@@ -146,12 +153,12 @@ for i in tqdm_notebook(range(len(val_famillies_list))):
     # reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.2, patience=20, verbose=1)
     callbacks_list = [checkpoint, reduce_on_plateau]
 
-    history = model.fit_generator(gen(train, train_person_to_images_map, batch_size=16),
-                                  use_multiprocessing=False,
-                                  validation_data=gen(val, val_person_to_images_map, batch_size=16),
-                                  epochs=66, verbose=2,
-                                  workers=1, callbacks=callbacks_list,
-                                  steps_per_epoch=300, validation_steps=200)
+    history = model.fit(gen(train, train_person_to_images_map, batch_size=16),
+                        use_multiprocessing=False,
+                        validation_data=gen(val, val_person_to_images_map, batch_size=16),
+                        epochs=66, verbose=2,
+                        workers=1, callbacks=callbacks_list,
+                        steps_per_epoch=300, validation_steps=200)
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\test\\test-private-faces"
 
@@ -164,13 +171,13 @@ def chunker(seq, size=32):
 
 preds_for_sub = np.zeros(submission.shape[0])
 
-for i in tqdm_notebook(range(len(val_famillies_list))):
+for i in tqdm(range(len(val_famillies_list))):
     file_path = f"./baseline_{i}.h5"
     model.load_weights(file_path)
     # Get the predictions
     predictions = []
 
-    for batch in tqdm_notebook(chunker(submission.image_pairs.values)):
+    for batch in tqdm(chunker(submission.image_pairs.values)):
         X1 = [x.split("-")[0] for x in batch]
         X1 = np.array([read_img(test_path + x) for x in X1])
 
@@ -184,5 +191,3 @@ for i in tqdm_notebook(range(len(val_famillies_list))):
 
 submission['prediction'] = preds_for_sub
 submission.to_csv("predictions.csv", index=False)
-
-
