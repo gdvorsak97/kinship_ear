@@ -160,7 +160,7 @@ for i in tqdm(range(len(val_famillies_list))):
                         workers=1, callbacks=callbacks_list,
                         steps_per_epoch=300, validation_steps=200)
 
-test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\test\\test-private-faces"
+test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\test\\test-private-faces\\"
 
 submission = pd.read_csv('D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\results.csv')
 
@@ -187,7 +187,7 @@ for i in tqdm(range(len(val_famillies_list))):
         pred = model.predict([X1, X2]).ravel().tolist()
         predictions += pred
 
-    preds_for_sub += np.array(predictions) / len(val_famillies_list)  # why is this a step?
+    preds_for_sub += np.array(predictions) / len(val_famillies_list)  # average
 
 submission['prediction'] = preds_for_sub
-submission.to_csv("predictions.csv", index=False)
+submission.to_csv("baseline_results.csv", index=False)
