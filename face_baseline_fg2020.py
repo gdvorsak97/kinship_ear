@@ -22,7 +22,8 @@ val_famillies_list = ["F09", "F04", "F08", "F06", "F02"]
 def get_train_val(familly_name):
     # train_file_path = "./input/train_relationships.csv"
     # train_folders_path = "./input/train/"
-    train_file_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train_list.csv"
+    train_file_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train lists" \
+                      "\\test-public-lists\\ss.csv"
     train_folders_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\train" \
                          "\\test-public-faces\\"
     val_famillies = familly_name
@@ -162,7 +163,8 @@ for i in tqdm(range(len(val_famillies_list))):
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\test\\test-private-faces\\"
 
-submission = pd.read_csv('D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset\\results.csv')
+submission = pd.read_csv('D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\FIW 2020 dataset'
+                         '\\test-lists-merged\\ss.csv')
 
 
 def chunker(seq, size=32):
@@ -177,7 +179,7 @@ for i in tqdm(range(len(val_famillies_list))):
     # Get the predictions
     predictions = []
 
-    for batch in tqdm(chunker(submission.image_pairs.values)):
+    for batch in tqdm(chunker(submission.image_pair.values)):
         X1 = [x.split("-")[0] for x in batch]
         X1 = np.array([read_img(test_path + x) for x in X1])
 

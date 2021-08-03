@@ -26,7 +26,7 @@ c_pred = np.zeros(len(pred))
 
 # first define what is binary
 for i in range(len(pred)):
-    if pred[i] >= 0.5:
+    if pred[i] >= 0.27:
         c_pred[i] = 1
     else:
         c_pred[i] = 0

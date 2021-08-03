@@ -199,8 +199,8 @@ def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    img = crop_ears(in_img, "top")
-    img = cv2.resize(img, (224, 224))
+    # img = crop_ears(in_img, "top")
+    img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
     img = preprocess_input(img, version=2)  # 1 for VGG, 2 otherwise
