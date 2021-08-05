@@ -3,20 +3,20 @@ from glob import glob
 from random import choice, sample
 
 import cv2
-import keras
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras import backend as K
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D, Concatenate, Multiply, Dropout, Subtract
-from keras.models import Model
-from keras.optimizers import Adam
-from keras.preprocessing import image
+from tensorflow.keras import backend as K
+from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D, Concatenate, Multiply, Dropout, Subtract
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.preprocessing import image
 from keras_vggface.utils import preprocess_input
 from keras_vggface.vggface import VGGFace
 from matplotlib import pyplot as plt
 from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.backend import sign, sqrt, abs
 from tensorflow.python.keras.layers import Rescaling, RandomTranslation, RandomRotation, RandomZoom
 from tqdm import tqdm
 
@@ -78,16 +78,7 @@ def get_train_val(familly_name):
     return train, val, train_person_to_images_map, val_person_to_images_map
 
 
-METRICS = [
-    keras.metrics.TruePositives(name='tp'),
-    keras.metrics.FalsePositives(name='fp'),
-    keras.metrics.TrueNegatives(name='tn'),
-    keras.metrics.FalseNegatives(name='fn'),
-    keras.metrics.BinaryAccuracy(name='accuracy'),
-    keras.metrics.Precision(name='precision'),
-    keras.metrics.Recall(name='recall'),
-    keras.metrics.AUC(name='auc'),
-]
+
 
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
@@ -104,7 +95,7 @@ def focal_loss(gamma=2., alpha=.25):
 
 
 def signed_sqrt(x):
-    return keras.backend.sign(x) * keras.backend.sqrt(keras.backend.abs(x) + 1e-9)
+    return sign(x) * sqrt(abs(x) + 1e-9)
 
 
 def plot_loss(history, label, n):
@@ -304,12 +295,12 @@ for i in tqdm(range(len(val_famillies_list))):
     # reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.2, patience=20, verbose=1)
     callbacks_list = [checkpoint, reduce_on_plateau]
 
-    history = model.fit(gen(train, train_person_to_images_map, batch_size=16),
+    history = model.fit(gen(train, train_person_to_images_map, batch_size=8),
                         use_multiprocessing=False,
-                        validation_data=gen(val, val_person_to_images_map, batch_size=16),
-                        epochs=66, verbose=2,
+                        validation_data=gen(val, val_person_to_images_map, batch_size=6),
+                        epochs=50,
                         workers=1, callbacks=callbacks_list,
-                        steps_per_epoch=300, validation_steps=200)
+                        steps_per_epoch=200, validation_steps=32)
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
@@ -328,7 +319,7 @@ for i in tqdm(range(len(val_famillies_list))):
     # Get the predictions
     predictions = []
 
-    for batch in tqdm(chunker(submission.image_pair.values)):
+    for batch in tqdm(chunker(submission.img_pair.values)):
         X1 = [x.split("g-")[0] + 'g' for x in batch]
         X1 = np.array([read_img(test_path + x) for x in X1])
 
