@@ -199,7 +199,7 @@ def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    # img = crop_ears(in_img, "top")
+    in_img = crop_ears(in_img, "top")
     img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
@@ -241,7 +241,8 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
         yield [X1, X2], labels
 
 
-layers_to_freeze_f2b = 350
+# layers_to_freeze_f2b = 80
+# layers_to_freeze_b2f = -80
 
 
 # Straightforward, generate model as described in the post
@@ -252,9 +253,10 @@ def baseline_model():
     base_model = load_model("model_resnet_rec_ears.h5")
     base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
-    # 518 total layers
-    # for x in base_model.layers[layers_to_freeze_f2b:]:  # Freeze layers here - experiment with the num
-    #   x.trainable = False
+    #  518 total layers
+    # for x in base_model.layers[layers_to_freeze_f2b:]:
+    # for x in base_model.layers[:layers_to_freeze_b2f:]:  # Freeze layers here - experiment with the num
+    #    x.trainable = False
 
     x1 = RandomTranslation(width_factor=0.10, height_factor=0.10, fill_mode='nearest')(input_1)
     x2 = RandomTranslation(width_factor=0.10, height_factor=0.10, fill_mode='nearest')(input_2)
@@ -282,8 +284,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 100
-n_steps_per_epoch = 250
+n_epochs = 40
+n_steps_per_epoch = 100
 n_val_steps = 32
 file_path = "weights_resnet_kin_best.h5"
 
@@ -298,7 +300,7 @@ callbacks_list = [reduce_on_plateau]
 
 model = baseline_model()
 
-img_gen = gen(train, train_person_to_images_map, batch_size=2)
+img_gen = gen(train, train_person_to_images_map, batch_size=8)
 
 # model.load_weights(file_path)
 baseline_history = model.fit(img_gen, use_multiprocessing=False,
