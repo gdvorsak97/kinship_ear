@@ -286,9 +286,9 @@ def baseline_model():
     return model
 
 
-n_epochs = 40
-n_steps_per_epoch = 100
-n_val_steps = 32
+n_epochs = 25
+n_steps_per_epoch = 30
+n_val_steps = 10
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "vgg_face_best.h5"
 
