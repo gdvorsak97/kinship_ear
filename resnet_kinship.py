@@ -184,11 +184,11 @@ def crop_ears(img, region):
     elif region == "right":
         img = img[:, -int(np.round(224 / 3)):]
     elif region == "mid_vertical":
-        img = img[:, int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3))]
+        img = img[:, int(np.round(224 / 3)):int(np.round(224 / 3)) + int(np.round(224 / 3))]
     elif region == "top":
         img = img[0:int(np.round(224 / 3)), :]
     elif region == "mid_horizontal":
-        img = img[int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3)), :]
+        img = img[int(np.round(224 / 3)):int(np.round(224 / 3)) + int(np.round(224 / 3)), :]
     elif region == "bottom":
         img = img[-int(np.round(224 / 3)):, :]
     return img

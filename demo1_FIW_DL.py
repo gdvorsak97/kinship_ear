@@ -185,11 +185,11 @@ def crop_ears(img, region):
     elif region == "right":
         img = img[:, -int(np.round(224 / 3)):]
     elif region == "mid_vertical":
-        img = img[:, int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3))]
+        img = img[:, int(np.round(224 / 3)):int(np.round(224 / 3)) + int(np.round(224 / 3))]
     elif region == "top":
         img = img[0:int(np.round(224 / 3)), :]
     elif region == "mid_horizontal":
-        img = img[int(np.round(224 / 6)):int(np.round(224 / 6)) + int(np.round(224 / 3)), :]
+        img = img[int(np.round(224 / 3)):int(np.round(224 / 3)) + int(np.round(224 / 3)), :]
     elif region == "bottom":
         img = img[-int(np.round(224 / 3)):, :]
     return img
@@ -247,7 +247,7 @@ def gen(list_tuples, person_to_images_map, batch_size=16):
 
 
 # There are 17 layers with trainable parameters
-layers_to_freeze_b2f = -6
+layers_to_freeze_b2f = -18
 
 
 # Straightforward, generate model as described in the post
@@ -286,9 +286,9 @@ def baseline_model():
     return model
 
 
-n_epochs = 25
-n_steps_per_epoch = 30
-n_val_steps = 10
+n_epochs = 40
+n_steps_per_epoch = 100
+n_val_steps = 32
 key = "031109_" + str(n_epochs) + "_" + str(n_steps_per_epoch) + "_" + str(n_val_steps)
 file_path = "vgg_face_best.h5"
 
