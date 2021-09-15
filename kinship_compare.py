@@ -296,13 +296,15 @@ for i in tqdm(range(len(val_famillies_list))):
     # reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.2, patience=20, verbose=1)
     callbacks_list = [checkpoint, reduce_on_plateau]
 
-    history = model.fit(gen(train, train_person_to_images_map, batch_size=16),
+    """
+    history = model.fit(gen(train, train_person_to_images_map, batch_size=8),
                         use_multiprocessing=False,
                         validation_data=gen(val, val_person_to_images_map, batch_size=6),
-                        epochs=40,
+                        epochs=50,
                         workers=1, callbacks=callbacks_list,
                         steps_per_epoch=200, validation_steps=32)
     model.save_weights(file_path2)
+    """
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
@@ -318,7 +320,7 @@ preds_for_sub = np.zeros(submission.shape[0])
 for i in tqdm(range(len(val_famillies_list))):
     file_path = f"./compare_kin_{i}.h5"
     file_path2 = f"./compare_kin_end_{i}.h5"
-    model.load_weights(file_path)
+    model.load_weights(file_path2)
     # Get the predictions
     predictions = []
 
