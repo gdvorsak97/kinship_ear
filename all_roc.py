@@ -8,8 +8,8 @@ def plot_roc(name, labels, predictions, **kwargs):
     fp, tp, _ = roc_curve(labels, predictions)
 
     plt.plot(fp, tp, label=name, linewidth=2, **kwargs)
-    plt.xlabel('False positives [%]')
-    plt.ylabel('True positives [%]')
+    plt.xlabel('Lažno pozitivna stopnja')
+    plt.ylabel('Resnično pozitivna stopnja')
     plt.grid(True)
     ax = plt.gca()
     ax.set_aspect('equal')
@@ -22,8 +22,8 @@ path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\for paper - update
 filename_aff = path + "aff results\\aff_best.csv"
 filename_cotnet = path + "cotnet\\transformers_best.csv"
 filename_fiw = path + "fiw20 compare\\compare_results.csv"
-filename_resnet = path + "resnet_main\\resnet_main_52roc_results.csv"
-filename_res_local = path + "resnet_per_partes\\resnet_kinship_results.csv"
+filename_resnet = path + "resnet_from_scratch\\global\\predictions_resnet_from_scratch_best.csv"
+filename_res_local = path + "resnet_from_scratch\\local\\local_top_615.csv"
 filename_vgg = path + "vgg_face_model\\vgg_face_results_best_roc.csv"
 
 results_aff = pd.read_csv(filename_aff)
@@ -51,8 +51,8 @@ truth_vgg = list(results_vgg['ground_truth'])
 plot_roc("VGG Face", truth_vgg, pred_vgg, color=colors[0])
 plot_roc("CoTNet", truth_cotnet, pred_cotnet, color=colors[1])
 plot_roc("AFF", truth_aff, pred_aff, color=colors[2])
-plot_roc("Resnet152", truth_resnet, pred_resnet, color=colors[3])
-plot_roc("Resnet152 lokalno", truth_res_local, pred_res_local, color=colors[4])
+plot_roc("ResNet152 globalno", truth_resnet, pred_resnet, color=colors[3])
+plot_roc("ResNet152 lokalno", truth_res_local, pred_res_local, color=colors[4])
 plot_roc("ustc-nelslip", truth_fiw, pred_fiw, color=colors[6])
 
 plt.legend(loc='lower right')

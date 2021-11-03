@@ -1,3 +1,5 @@
+import datetime
+import pickle
 from collections import defaultdict
 from glob import glob
 from random import choice, sample
@@ -14,10 +16,15 @@ from tensorflow.keras.layers import Input, Dense, Concatenate
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Rescaling
+from tensorflow.python.keras.applications.resnet import ResNet152
+from tensorflow.python.keras.callbacks import TensorBoard
+from tensorflow.python.keras.layers import RandomTranslation, RandomRotation, RandomZoom, Rescaling, Flatten
+from tensorflow.python.ops.summary_ops_v2 import SummaryWriter
 from tqdm import tqdm
 
 mpl.rcParams['figure.figsize'] = (12, 10)
+log_dir = "logs/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = TensorBoard(histogram_freq=1, log_dir=log_dir)
 
 train_file_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train_list.csv"
 train_folders_path = "D:/Files on Desktop/engine/fax/magistrska naloga/Ankitas Ears/train/"
@@ -31,7 +38,7 @@ all_files = [str(i).split("/")[-1][:-4] for i in all_images]
 delete_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment" \
               "\\delete list.txt"
 delete_file = pd.read_csv(delete_path, delimiter=";")
-FILTERS = "maj_oob,mnr_oob,blr,ilu,drk,grn,lbl"
+FILTERS = "major_out_of_bounds,minor_out_of_bounds,blurry,illuminated,dark,green,label"
 filters = FILTERS.replace(" ", "")
 filters = filters.split(",")
 deleted = []
@@ -155,7 +162,6 @@ def visualize_crop(in_img, crp_img):
 
 
 def alignment(image, path, visualize=False, save=False):
-
     label_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment\\"
     delete_ist_path = label_path + "delete list.txt"
     filename = ""
@@ -199,7 +205,7 @@ def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    in_img = crop_ears(in_img, "mid_horizontal")
+    in_img = crop_ears(in_img, "right")
     img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
@@ -250,12 +256,13 @@ def baseline_model():
     input_1 = Input(shape=(224, 224, 3))
     input_2 = Input(shape=(224, 224, 3))
 
-    base_model = load_model("model_resnet_rec_ears.h5")
-    base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
+    base_model = ResNet152(weights='imagenet', include_top=False)
+    # base_model = load_model("model_resnet_rec_ears.h5")
+    # base_model.load_weights("weights_recognition_resnet_val96_finish.h5")
 
     #  518 total layers
     # for x in base_model.layers[layers_to_freeze_f2b:]:
-    # for x in base_model.layers[:layers_to_freeze_b2f:]:  # Freeze layers here - experiment with the num
+    # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
     #    x.trainable = False
 
     x1 = RandomTranslation(width_factor=0.10, height_factor=0.10, fill_mode='nearest')(input_1)
@@ -270,9 +277,13 @@ def baseline_model():
     x1 = base_model(x1)
     x2 = base_model(x2)
 
+    # use these when training from scratch
+    x1 = Flatten()(x1)
+    x2 = Flatten()(x2)
+
     x = Concatenate(axis=-1)([x1, x2])
 
-    x = Dense(322, activation="relu")(x)
+    x = Dense(100, activation="relu")(x)
     out = Dense(1, activation="sigmoid")(x)
 
     base_model.summary()
@@ -284,8 +295,8 @@ def baseline_model():
     return model
 
 
-n_epochs = 40
-n_steps_per_epoch = 100
+n_epochs = 100
+n_steps_per_epoch = 32
 n_val_steps = 32
 file_path = "weights_resnet_kin_best.h5"
 
@@ -295,12 +306,12 @@ checkpoint = ModelCheckpoint(file_path, verbose=1, save_best_only=True)
 # reduce rate when learning stagnates
 reduce_on_plateau = ReduceLROnPlateau(factor=0.1, patience=20, verbose=1)
 
-# callbacks_list = [checkpoint, reduce_on_plateau]
-callbacks_list = [reduce_on_plateau]
+# callbacks_list = [checkpoint, reduce_on_plateau, tensorboard_callback]
+callbacks_list = [reduce_on_plateau, tensorboard_callback]
 
 model = baseline_model()
 
-img_gen = gen(train, train_person_to_images_map, batch_size=8)
+img_gen = gen(train, train_person_to_images_map, batch_size=4)
 
 # model.load_weights(file_path)
 baseline_history = model.fit(img_gen, use_multiprocessing=False,
@@ -308,11 +319,14 @@ baseline_history = model.fit(img_gen, use_multiprocessing=False,
                              workers=1, callbacks=callbacks_list, steps_per_epoch=n_steps_per_epoch,
                              validation_steps=n_val_steps)
 
-# plot_loss(baseline_history, "Baseline", 0)
-plot_metrics(baseline_history)
+with open('trainHistoryDict', 'wb') as file_pi:
+    pickle.dump(baseline_history.history, file_pi)
+
+# history = pickle.load(open('trainHistoryDict', "rb"))
+plot_loss(baseline_history, "Baseline", 0)
+# plot_metrics(baseline_history)
 
 model.save_weights("weights_resnet_kin_finish.h5")
-
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
