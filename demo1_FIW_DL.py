@@ -205,8 +205,9 @@ def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
     in_img = cv2.resize(in_img, (224, 224))
-    # img = crop_ears(in_img, "top")
+    in_img = crop_ears(in_img, "mid-horizontal")
     img = cv2.resize(in_img, (224, 224))
+    # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
     img = preprocess_input(img, version=1)  # 1 for VGG, 2 otherwise
     img = rescale(img)
@@ -257,8 +258,8 @@ def baseline_model():
 
     base_model = VGGFace(model='vgg16', include_top=False)
 
-    for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
-        x.trainable = False
+    # for x in base_model.layers[:layers_to_freeze_b2f]:  # Freeze layers here - experiment with the num
+    #    x.trainable = False
 
     x1 = base_model(input_1)
     x2 = base_model(input_2)

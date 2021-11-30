@@ -16,8 +16,8 @@ def plot_roc(name, labels, predictions, **kwargs):
 
 
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
-path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\for paper - updated 1509\\result_files\\"
+plt.figure()
+path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\for paper - updated 3011\\result_files\\"
 
 filename_aff = path + "aff results\\aff_best.csv"
 filename_cotnet = path + "cotnet\\transformers_best.csv"
@@ -53,7 +53,10 @@ plot_roc("CoTNet", truth_cotnet, pred_cotnet, color=colors[1])
 plot_roc("AFF", truth_aff, pred_aff, color=colors[2])
 plot_roc("ResNet152 globalno", truth_resnet, pred_resnet, color=colors[3])
 plot_roc("ResNet152 lokalno", truth_res_local, pred_res_local, color=colors[4])
-plot_roc("ustc-nelslip", truth_fiw, pred_fiw, color=colors[6])
+plot_roc("USTC-NELSLIP", truth_fiw, pred_fiw, color=colors[6])
 
 plt.legend(loc='lower right')
+destination = "C:\\Users\\Grega\\Desktop\\output\\"
+filename = destination + "all_roc_vect.pdf"
+plt.savefig(filename)
 plt.show()

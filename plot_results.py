@@ -1,23 +1,41 @@
 import cv2
-from matplotlib import pyplot as plt
+import pandas as pd
 
-path = "C:\\Users\\Grega\\Desktop\\graphs\\"
-file1 = path + "resnet_main\\example_roc_52_loss.png"
-file2 = path + "resnet_main\\example_roc_52_test.png"
 
-im1 = cv2.imread(file1)
-im2 = cv2.imread(file2)
-im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2RGB)
-im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2RGB)
+def alignment(image, path, visualize=False, save=False):
+    label_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\bounding boxes alligment\\"
+    delete_ist_path = label_path + "delete list.txt"
+    filename = ""
+    if "/" in path:
+        family = path.split("/")[-3]
+        filename = path.split("/")[-1]
+        label_path += "labels " + str(family) + ".csv"
+    elif "\\" in path:
+        filename = path.split("\\")[-1]
+        label_path = label_path + "all_labels.csv"
+    label_file = pd.read_csv(label_path)
+    bbox_data = label_file[label_file['file'] == filename]
+    bbox = image[bbox_data['y1'].values[0]:bbox_data['y1'].values[0] + bbox_data['dy'].values[0],
+           bbox_data['x1'].values[0]:bbox_data['x1'].values[0] + bbox_data['dx'].values[0]]
+    if visualize:
+        cv2.imshow("Detected", bbox)
+        cv2.waitKey()
+    if save:
+        cv2.imwrite("example.png", bbox)
+    return bbox
 
-fig1, (ax1_11, ax1_12) = plt.subplots(1, 2)
 
-ax1_11.axis('off')
-ax1_12.axis('off')
+path = "C:\\Users\\Grega\\Desktop\\pairs\\"
+pair_type = "true positive"
+file = "IMG-20200825-WA0063"
+load_path = path + pair_type + "\\1\\" + file + ".jpg"
 
-ax1_11.imshow(im1)
-ax1_12.imshow(im2)
+in_img = cv2.imread(load_path)
+in_img = alignment(in_img, load_path)
+in_img = cv2.resize(in_img, (224, 224))
 
-plt.show()
-
-# USE MERGING ONLINE, IT'S BETTER
+cv2.imshow("img", in_img)
+cv2.waitKey()
+save_path = path + pair_type + "\\1\\resized\\"
+print("save to " + save_path)
+cv2.imwrite(save_path + file + ".jpg", in_img)
