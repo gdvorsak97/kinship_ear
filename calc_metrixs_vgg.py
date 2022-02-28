@@ -54,8 +54,8 @@ FN = cm[1, 0]
 TP = cm[1, 1]
 FP = cm[0, 1]
 
-sens = TP / (TP + TN)  # pred relationships as true relationships
-spec = TN / (TP + TN)  # pred non-related as non-related
+sens = TP / (TP + FN)  # pred relationships as true relationships
+spec = TN / (TN + FP)  # pred non-related as non-related
 
 print('Sensitivity:\t ' + str(sens))
 print('Specificity:\t ' + str(spec))
