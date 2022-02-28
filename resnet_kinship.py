@@ -204,8 +204,8 @@ def crop_ears(img, region):
 def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
-    in_img = cv2.resize(in_img, (224, 224))
-    in_img = crop_ears(in_img, "right")
+    # in_img = cv2.resize(in_img, (224, 224))
+    # in_img = crop_ears(in_img, "right")
     img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")

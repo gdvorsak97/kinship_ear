@@ -4,8 +4,9 @@ from glob import glob
 
 
 base_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\all imgs copy\\"
-member1 = base_path + "family11\\mother11"
-member2 = base_path + "family11\\son11"
+family = "20"
+member2 = base_path + "family" + family + "\\mother20"
+member1 = base_path + "family" + family + "\\son20"
 # 1 means yes 0 means no
 relation = 1
 
@@ -19,8 +20,17 @@ list2 = [x.split('\\')[-1] for x in list2]
 
 combs = list(itertools.product(list1, list2))
 
+# filename = "pairs.txt"
+# with open(filename, 'a') as f:
+#    f.write(str(len(combs)) + ",")
+
+# for main task
 numTest = len(glob("test*.csv"))
 filename = 'test.csv'
+
+# for pair counting
+# numTest = len(glob("test_fam*.csv"))
+# filename = 'test_fam.csv'
 
 # writing to csv file
 with open(filename, 'a',  newline='') as csvfile:

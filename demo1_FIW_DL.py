@@ -8,7 +8,7 @@ import numpy as np
 from random import choice, sample
 
 from tensorflow.python.keras import Sequential
-from tensorflow.python.keras.layers import Rescaling
+from tensorflow.python.keras.layers import Rescaling, Flatten
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
@@ -204,8 +204,8 @@ rescale = Sequential([
 def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
-    in_img = cv2.resize(in_img, (224, 224))
-    in_img = crop_ears(in_img, "mid-horizontal")
+    # in_img = cv2.resize(in_img, (224, 224))
+    # in_img = crop_ears(in_img, "right")
     img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
@@ -269,12 +269,18 @@ def baseline_model():
     # x_dot = Dot(axes=[2, 2], normalize=True)([x1_, x2_])
     # x_dot = Flatten()(x_dot)
 
-    x1 = Concatenate(axis=-1)([GlobalMaxPool2D()(x1), GlobalAvgPool2D()(x1)])
-    x2 = Concatenate(axis=-1)([GlobalMaxPool2D()(x2), GlobalAvgPool2D()(x2)])
-    x3 = Subtract()([x1, x2])
-    x3 = Multiply()([x3, x3])
-    x = Multiply()([x1, x2])
-    x = Concatenate(axis=-1)([x, x3])
+    # ORIGINAL
+    # x1 = Concatenate(axis=-1)([GlobalMaxPool2D()(x1), GlobalAvgPool2D()(x1)])
+    # x2 = Concatenate(axis=-1)([GlobalMaxPool2D()(x2), GlobalAvgPool2D()(x2)])
+    # x3 = Subtract()([x1, x2])
+    # x3 = Multiply()([x3, x3])
+    # x = Multiply()([x1, x2])
+    # x = Concatenate(axis=-1)([x, x3])
+
+    # NEW - unified with other models
+    x1 = Flatten()(x1)
+    x2 = Flatten()(x2)
+    x = Concatenate(axis=-1)([x1, x2])
 
     x = Dense(100, activation="relu")(x)
     x = Dropout(0.01)(x)

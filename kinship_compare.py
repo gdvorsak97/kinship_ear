@@ -8,7 +8,8 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D, Concatenate, Multiply, Dropout, Subtract
+from tensorflow.keras.layers import Input, Dense, GlobalMaxPool2D, GlobalAvgPool2D,\
+    Concatenate, Multiply, Dropout, Subtract, Flatten
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing import image
@@ -192,8 +193,8 @@ def crop_ears(img, region):
 def read_img(path):
     in_img = cv2.imread(path)
     in_img = alignment(in_img, path)
-    in_img = cv2.resize(in_img, (224, 224))
-    # img = crop_ears(in_img, "top")
+    # in_img = cv2.resize(in_img, (224, 224))
+    # in_img = crop_ears(in_img, "right")
     img = cv2.resize(in_img, (224, 224))
     # visualize_crop(in_img, img)
     img = np.array(img, dtype="float64")
@@ -257,19 +258,23 @@ def baseline_model():
     x1 = base_model(x1)
     x2 = base_model(x2)
 
-    x1 = GlobalMaxPool2D()(x1)
-    x2 = GlobalAvgPool2D()(x2)
+    # ORIGINAL
+    # x1 = GlobalMaxPool2D()(x1)
+    # x2 = GlobalAvgPool2D()(x2)
+    # x3 = Subtract()([x1, x2])
+    # x3 = Multiply()([x3, x3])
+    # x1_ = Multiply()([x1, x1])
+    # x2_ = Multiply()([x2, x2])
+    # x4 = Subtract()([x1_, x2_])
+    # x5 = Multiply()([x1, x2])
+    # x = Concatenate(axis=-1)([x3, x4, x5])
 
-    x3 = Subtract()([x1, x2])
-    x3 = Multiply()([x3, x3])
+    # NEW - unified with other models
+    x1 = Flatten()(x1)
+    x2 = Flatten()(x2)
+    x = Concatenate(axis=-1)([x1, x2])
 
-    x1_ = Multiply()([x1, x1])
-    x2_ = Multiply()([x2, x2])
-    x4 = Subtract()([x1_, x2_])
-
-    x5 = Multiply()([x1, x2])
-
-    x = Concatenate(axis=-1)([x3, x4, x5])
+    # Already commented out - 2 lines
     #  x = Dense(512, activation="relu")(x)
     #  x = Dropout(0.03)(x)
     x = Dense(128, activation="relu")(x)
@@ -296,15 +301,13 @@ for i in tqdm(range(len(val_famillies_list))):
     # reduce_on_plateau = ReduceLROnPlateau(monitor="val_acc", mode="max", factor=0.2, patience=20, verbose=1)
     callbacks_list = [checkpoint, reduce_on_plateau]
 
-    """
     history = model.fit(gen(train, train_person_to_images_map, batch_size=8),
                         use_multiprocessing=False,
                         validation_data=gen(val, val_person_to_images_map, batch_size=6),
-                        epochs=50,
+                        epochs=40,
                         workers=1, callbacks=callbacks_list,
-                        steps_per_epoch=200, validation_steps=32)
+                        steps_per_epoch=100, validation_steps=32)
     model.save_weights(file_path2)
-    """
 
 test_path = "D:\\Files on Desktop\\engine\\fax\\magistrska naloga\\Ankitas Ears\\test\\"
 
